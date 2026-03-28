@@ -1,0 +1,15 @@
+{
+  "id": "workorder-profile",
+  "name": "workorder-standard",
+  "version": "1.0",
+  "entityType": "WorkOrder",
+  "description": "Metadata profile defining the expected properties and valid lifecycle values for work order records. Work orders are associated with equipment assets and represent discrete units of planned or corrective work.",
+  "requiredProperties": [ "id", "workOrderNumber", "assetId", "title", "status", "priority" ],
+  "optionalProperties": [ "description", "path", "scheduledStartUtc", "scheduledEndUtc", "metadata" ],
+  "relationships": {
+    "asset": "Equipment"
+  },
+  "validStatusValues": [ "New", "Open", "InProgress", "OnHold", "Completed", "Cancelled" ],
+  "validPriorityValues": [ "Low", "Normal", "High", "Critical" ],
+  "telemetryPoints": []
+}

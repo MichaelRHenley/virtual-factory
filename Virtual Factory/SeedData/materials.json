@@ -1,0 +1,114 @@
+[
+  {
+    "code": "MAT-BELT-01",
+    "description": "Conveyor drive belt – 2 m",
+    "unit": "each",
+    "category": "Spare Part",
+    "usedBy": [ "eq-01", "eq-04", "eq-06", "eq-12" ]
+  },
+  {
+    "code": "MAT-TIP-WLD-01",
+    "description": "MIG welding contact tip M6 x 28 mm",
+    "unit": "each",
+    "category": "Consumable",
+    "usedBy": [ "eq-05" ]
+  },
+  {
+    "code": "MAT-LABEL-01",
+    "description": "Pressure-sensitive label roll – 50 mm x 30 mm, 1000 labels",
+    "unit": "roll",
+    "category": "Consumable",
+    "usedBy": [ "eq-07" ]
+  },
+  {
+    "code": "MAT-GRIP-PAL-01",
+    "description": "Palletiser rubber gripper pad set",
+    "unit": "set",
+    "category": "Spare Part",
+    "usedBy": [ "eq-09" ]
+  },
+  {
+    "code": "PROD-FRAME-A",
+    "description": "Structural frame sub-assembly – Type A",
+    "unit": "each",
+    "category": "Finished Good",
+    "usedBy": []
+  },
+  {
+    "code": "PROD-WELD-B",
+    "description": "Welded bracket component – Type B",
+    "unit": "each",
+    "category": "Semi-Finished Good",
+    "usedBy": []
+  },
+  {
+    "code": "RAW-STEEL-S235",
+    "description": "Mild steel sheet – S235JR, 2 mm, 1000 x 2000 mm",
+    "unit": "sheet",
+    "category": "Raw Material",
+    "usedBy": [ "eq-05", "eq-10", "eq-11" ]
+  },
+  {
+    "code": "RAW-WIRE-WLD-01",
+    "description": "MIG welding wire spool – ER70S-6, 1.0 mm, 15 kg",
+    "unit": "spool",
+    "category": "Consumable",
+    "usedBy": [ "eq-05" ]
+  },
+  {
+    "code": "MAT-TOOLING-PB-01",
+    "description": "Press brake punch and die set – V-bend 90°, 1000 mm",
+    "unit": "set",
+    "category": "Spare Part",
+    "usedBy": [ "eq-10" ]
+  },
+  {
+    "code": "MAT-LENS-LC-01",
+    "description": "Laser cutter focusing lens – ZnSe, 2.5 inch",
+    "unit": "each",
+    "category": "Spare Part",
+    "usedBy": [ "eq-11" ]
+  },
+  {
+    "code": "MAT-JAW-LT-01",
+    "description": "Lathe soft chuck jaw set – 3-jaw, 250 mm, bored to order",
+    "unit": "set",
+    "category": "Spare Part",
+    "usedBy": [ "eq-13" ]
+  },
+  {
+    "code": "MAT-IND-HT-01",
+    "description": "Rockwell hardness tester indenter kit – diamond cone and 1/16 inch ball",
+    "unit": "kit",
+    "category": "Spare Part",
+    "usedBy": [ "eq-17" ]
+  },
+  {
+    "code": "MAT-COOLANT-SYNTH-01",
+    "description": "Synthetic water-miscible machining coolant concentrate – 20 L",
+    "unit": "can",
+    "category": "Consumable",
+    "usedBy": [ "eq-13", "eq-14" ]
+  },
+  {
+    "code": "RAW-ALUM-6082",
+    "description": "Aluminium round bar – 6082-T6, 80 mm diameter, 3 m",
+    "unit": "bar",
+    "category": "Raw Material",
+    "usedBy": [ "eq-13", "eq-14" ]
+  },
+  {
+    "code": "PROD-SHEET-PANEL-A",
+    "description": "Formed sheet metal panel – Type A, semi-finished",
+    "unit": "each",
+    "category": "Semi-Finished Good",
+    "usedBy": []
+  },
+  {
+    "code": "PROD-MACHINED-PART-B",
+    "description": "Turned and milled precision component – Type B, finished",
+    "unit": "each",
+    "category": "Finished Good",
+    "usedBy": []
+  }
+]

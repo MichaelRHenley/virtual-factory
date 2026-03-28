@@ -1,0 +1,42 @@
+{
+  "id": "line-profile",
+  "name": "line-standard",
+  "version": "1.0",
+  "entityType": "Line",
+  "description": "Metadata profile for a production line within an area. A line is a coordinated sequence of equipment assets working toward a common production output.",
+  "requiredProperties": [ "id", "name", "displayName", "path", "parentId" ],
+  "optionalProperties": [ "description", "tags", "profileId" ],
+  "relationships": {
+    "parent": "Area",
+    "children": "Equipment"
+  },
+  "telemetryPoints": [
+    {
+      "name": "line-state",
+      "displayName": "Line State",
+      "dataType": "string",
+      "unit": null,
+      "category": "State",
+      "isWritable": false,
+      "description": "Current operational state of the line. Typical values: Running, Stopped, Faulted, Idle."
+    },
+    {
+      "name": "throughput-rate",
+      "displayName": "Throughput Rate",
+      "dataType": "double",
+      "unit": "units/min",
+      "category": "Telemetry",
+      "isWritable": false,
+      "description": "Current output rate of the line in units per minute."
+    },
+    {
+      "name": "shift-count",
+      "displayName": "Shift Count",
+      "dataType": "int",
+      "unit": "units",
+      "category": "Telemetry",
+      "isWritable": false,
+      "description": "Number of units produced since the start of the current shift."
+    }
+  ]
+}

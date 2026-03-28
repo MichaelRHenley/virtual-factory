@@ -1,0 +1,1115 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Virtual Factory Dashboard</title>
+
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 20px;
+            background: #f4f6f8;
+            color: #222;
+        }
+
+        h1 {
+            margin-bottom: 8px;
+        }
+
+        .subtext {
+            margin-bottom: 20px;
+            color: #666;
+        }
+
+        .heartbeat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .heartbeat-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: gray;
+        }
+
+        .heartbeat-green {
+            background: #16a34a;
+        }
+
+        .heartbeat-amber {
+            background: #f59e0b;
+        }
+
+        .heartbeat-red {
+            background: #dc2626;
+        }
+
+        .summary-bar {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .summary-tile {
+            background: white;
+            border-radius: 10px;
+            padding: 14px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            cursor: pointer;
+        }
+
+        .summary-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .summary-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .summary-tile.total .summary-value {
+            color: #1d4ed8;
+        }
+
+        .summary-tile.warm .summary-value {
+            color: #c2410c;
+        }
+
+        .summary-tile.active {
+            outline: 2px solid #2563eb;
+            background: #eef2ff;
+        }
+
+        .dashboard-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) 360px;
+            gap: 16px;
+            align-items: start;
+        }
+
+        .main-panel {
+            min-width: 0;
+        }
+
+        .card,
+        .detail-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .detail-panel {
+            min-height: 300px;
+            position: sticky;
+            top: 20px;
+        }
+
+        .detail-empty {
+            color: #777;
+        }
+
+        .detail-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .detail-meta {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 8px 12px;
+        }
+
+        .detail-label {
+            color: #555;
+        }
+
+        .detail-value {
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .trend-section {
+            margin-top: 16px;
+        }
+
+        .trend-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .trend-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .trend-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 10px;
+            background: #fafafa;
+        }
+
+        .trend-card-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #444;
+        }
+
+        .trend-canvas {
+            width: 100%;
+            height: 90px;
+            display: block;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .controls {
+            margin-bottom: 12px;
+        }
+
+        input {
+            padding: 8px 10px;
+            width: 320px;
+            max-width: 100%;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 10px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: top;
+        }
+
+        th {
+            background: #f9fafb;
+        }
+
+        .muted {
+            color: #777;
+            font-size: 0.9rem;
+        }
+
+        .status-text {
+            margin-top: 12px;
+            font-size: 0.95rem;
+            color: #444;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            line-height: 1;
+        }
+
+        .badge-green {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-red {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-gray {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .badge-blue {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .badge-orange {
+            background: #ffedd5;
+            color: #9a3412;
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .detail-panel {
+                position: static;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Virtual Factory Dashboard</h1>
+    <div class="subtext">Live view of latest telemetry values</div>
+
+    <div class="heartbeat">
+        <span id="heartbeatDot" class="heartbeat-dot"></span>
+        <span id="heartbeatText">Connecting...</span>
+    </div>
+
+    <div id="summaryBar" class="summary-bar">
+        <div class="summary-tile total" onclick="setEquipmentFilter(null)">
+            <div id="totalCount" class="summary-value">0</div>
+            <div class="summary-label">Equipment</div>
+        </div>
+
+        <div class="summary-tile" onclick="setEquipmentFilter('running')">
+            <div id="runningCount" class="summary-value">0</div>
+            <div class="summary-label">Running</div>
+        </div>
+
+        <div class="summary-tile" onclick="setEquipmentFilter('stopped')">
+            <div id="stoppedCount" class="summary-value">0</div>
+            <div class="summary-label">Stopped</div>
+        </div>
+
+        <div class="summary-tile warm" onclick="setEquipmentFilter('warm')">
+            <div id="warmCount" class="summary-value">0</div>
+            <div class="summary-label">Warm</div>
+        </div>
+
+        <div id="alarmTile" class="summary-tile" onclick="setEquipmentFilter('alarm')">
+            <div id="alarmCount" class="summary-value">0</div>
+            <div class="summary-label">Alarmed</div>
+        </div>
+    </div>
+
+    <div class="dashboard-layout">
+        <div class="main-panel">
+            <div class="card">
+                <div class="controls">
+                    <input id="filterBox" type="text" placeholder="Filter by topic..." />
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Topic</th>
+                            <th>Value</th>
+                            <th>Status</th>
+                            <th>Source</th>
+                            <th>Timestamp (UTC)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="telemetryBody">
+                        <tr>
+                            <td colspan="5" class="muted">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="status-text" id="statusText">Waiting for data...</div>
+            </div>
+        </div>
+
+        <div id="detailPanel" class="detail-panel">
+            <div class="detail-empty">Select a machine</div>
+        </div>
+    </div>
+
+    <script>
+        const telemetryBody = document.getElementById("telemetryBody");
+        const statusText = document.getElementById("statusText");
+        const filterBox = document.getElementById("filterBox");
+
+        let latestRows = [];
+        let activeEquipmentFilter = null;
+        let lastTelemetryUpdate = null;
+        let selectedEquipment = null;
+        let signalHistory = {};
+        let summaryMetrics = null;
+        let eventSummaryByEquipment = {};
+        const MAX_HISTORY_POINTS = 30;
+
+        function getEquipmentName(topic) {
+            if (!topic) return "unknown";
+            const parts = topic.split("/");
+            return parts.length >= 2 ? parts[parts.length - 2] : "unknown";
+        }
+
+        function getSignalName(topic) {
+            if (!topic) return "";
+            const parts = topic.split("/");
+            return parts[parts.length - 1];
+        }
+
+        function groupByEquipment(rows) {
+            const groups = {};
+            for (const row of rows) {
+                const eq = getEquipmentName(row.topic);
+                if (!groups[eq]) groups[eq] = [];
+                groups[eq].push(row);
+            }
+            return groups;
+        }
+
+        function getHistoryKey(eq, signalName) {
+            return `${eq}__${signalName}`;
+        }
+
+        function recordSignalHistory(rows) {
+            const grouped = groupByEquipment(rows);
+
+            Object.entries(grouped).forEach(([eq, eqRows]) => {
+                eqRows.forEach(row => {
+                    const signalName = getSignalName(row.topic);
+                    const numericValue = parseFloat(row.value);
+
+                    if (isNaN(numericValue)) return;
+
+                    const key = getHistoryKey(eq, signalName);
+
+                    if (!signalHistory[key]) {
+                        signalHistory[key] = [];
+                    }
+
+                    signalHistory[key].push({
+                        timestampUtc: row.timestampUtc,
+                        value: numericValue
+                    });
+
+                    if (signalHistory[key].length > MAX_HISTORY_POINTS) {
+                        signalHistory[key] = signalHistory[key].slice(-MAX_HISTORY_POINTS);
+                    }
+                });
+            });
+        }
+
+        async function updateSummaryBar(rows) {
+            const grouped = groupByEquipment(rows);
+
+            let running = 0;
+            let stopped = 0;
+            let alarmed = 0;
+            let warm = 0;
+
+            const total = Object.keys(grouped).length;
+            summaryMetrics = await loadSummaryMetrics();
+
+            Object.entries(grouped).forEach(([eq, eqRows]) => {
+                const summary = getEquipmentSummary(eqRows, eq);
+
+                if (summary.hasAlarm) alarmed++;
+                if (summary.isRunning === true) running++;
+                if (summary.isRunning === false) stopped++;
+                if (summary.isHot) warm++;
+            });
+
+            document.getElementById("totalCount").textContent = total;
+            document.getElementById("runningCount").textContent = running;
+            document.getElementById("stoppedCount").textContent = stopped;
+ {
+                document.getElementById("alarmCount").textContent = alarmed;
+
+                const alarmTile = document.getElementById("alarmTile");
+
+                const hasActiveAlarm =
+                    Object.values(eventSummaryByEquipment)
+                        .some(x => x.longestCurrentAlarm !== null);
+
+                if (hasActiveAlarm) {
+                    alarmTile.classList.add("alarm");
+                } else {
+                    alarmTile.classList.remove("alarm");
+                }
+            }
+            document.getElementById("warmCount").textContent = warm;
+
+            if (summaryMetrics?.lastAlarmSecondsAgo != null) {
+                document.querySelector(".summary-tile.alarm .summary-label")
+                    .textContent =
+                    `Alarmed (last ${formatDuration(summaryMetrics.lastAlarmSecondsAgo)} ago)`;
+            }
+
+            if (summaryMetrics?.lastStoppedSecondsAgo != null) {
+                document.querySelector(".summary-tile:nth-child(3) .summary-label")
+                    .textContent =
+                    `Stopped (last ${formatDuration(summaryMetrics.lastStoppedSecondsAgo)} ago)`;
+            }
+            if (!summaryMetrics?.lastAlarmSecondsAgo && alarmed === 0) {
+                document.querySelector(".summary-tile.alarm .summary-label")
+                    .textContent = "Alarmed";
+            }
+        }
+
+        function setEquipmentFilter(filter) {
+            const tiles = document.querySelectorAll(".summary-tile");
+
+            if (activeEquipmentFilter === filter) {
+                activeEquipmentFilter = null;
+            } else {
+                activeEquipmentFilter = filter;
+            }
+
+            tiles.forEach(t => t.classList.remove("active"));
+
+            if (activeEquipmentFilter) {
+                const tileIndex =
+                    filter === "running" ? 1 :
+                        filter === "stopped" ? 2 :
+                            filter === "warm" ? 3 :
+                                4;
+
+                tiles[tileIndex].classList.add("active");
+            }
+
+            if (!filter) {
+                document.querySelectorAll(".summary-tile")
+                    .forEach(t => t.classList.remove("active"));
+            }
+           
+            renderRows();
+        }
+
+        function getEquipmentSummary(rows, equipmentId) {
+            let hasAlarm = false;
+            let isRunning = null;
+            let isHot = false;
+            let newestTimestamp = null;
+
+            for (const row of rows) {
+                const topic = (row.topic ?? "").toLowerCase();
+                const value = String(row.value ?? "").toLowerCase();
+
+                if (topic.includes("alarm") && value === "true") {
+                    hasAlarm = true;
+                }
+
+                if (topic.includes("run-status")) {
+                    isRunning = value === "true";
+                }
+
+                if (topic.includes("temperature")) {
+                    const n = parseFloat(row.value);
+                    if (!isNaN(n) && n >= 70) {
+                        isHot = true;
+                    }
+                }
+
+                if (row.timestampUtc) {
+                    const ts = Date.parse(row.timestampUtc);
+                    if (!newestTimestamp || ts > newestTimestamp) {
+                        newestTimestamp = ts;
+                    }
+                }
+            }
+
+            const eventSummary =
+                eventSummaryByEquipment[(equipmentId ?? "").trim().toUpperCase()] ?? null;
+
+            return {
+                hasAlarm,
+                isRunning,
+                isHot,
+                newestTimestamp,
+                isOffline: false,
+                offlineSeconds: null,
+                stopCount24h: eventSummary?.stopCount24h ?? 0,
+                alarmCount24h: eventSummary?.alarmCount24h ?? 0,
+                latestEvent: eventSummary?.latestEvent ?? null,
+                longestCurrentAlarm: eventSummary?.longestCurrentAlarm ?? null
+            };
+        }
+
+        function getSeverityRank(summary) {
+            if (summary.isOffline) return 0;
+
+            if (summary.longestCurrentAlarm)
+                return 1;
+
+            if (summary.latestEvent?.state === "Active")
+                return 2;
+
+            if (summary.hasAlarm)
+                return 3;
+
+            if (summary.alarmCount24h > 0)
+                return 4;
+
+            if (summary.isHot)
+                return 5;
+
+            if (summary.isRunning === false)
+                return 6;
+
+            if (summary.isRunning === true)
+                return 7;
+
+            return 8;
+        }
+
+        async function selectEquipment(eq) {
+            selectedEquipment = eq;
+            renderRows();
+            await renderDetailPanel();
+        }
+
+        function renderEquipmentBadges(summary) {
+            
+            let html = "";
+
+            if (summary.isOffline) {
+                const age = summary.offlineSeconds ?? 0;
+                const label =
+                    age < 60 ? `${age}s` :
+                        age < 3600 ? `${Math.floor(age / 60)}m` :
+                            `${Math.floor(age / 3600)}h`;
+
+                html += `<span class="badge badge-red" style="margin-left:8px;">offline ${label}</span>`;
+                return html;
+            }
+
+            if (summary.hasAlarm) {
+                html += `<span class="badge badge-red" style="margin-left:8px;">alarm</span>`;
+            }
+
+            if (summary.longestCurrentAlarm) {
+                html += `<span class="badge badge-red" style="margin-left:8px;">
+        alarm active ${formatDuration(summary.longestCurrentAlarm.durationSeconds)}
+    </span>`;
+            }
+            else if (summary.alarmCount24h > 0) {
+                html += `<span class="badge badge-orange" style="margin-left:8px;">
+        ${summary.alarmCount24h} alarms (24h)
+    </span>`;
+            }
+
+            if (summary.isHot) {
+                html += `<span class="badge badge-orange" style="margin-left:8px;">warm</span>`;
+            }
+
+            if (summary.isRunning === true) {
+                html += `<span class="badge badge-green" style="margin-left:8px;">running</span>`;
+            } else if (summary.isRunning === false) {
+                html += `<span class="badge badge-gray" style="margin-left:8px;">stopped</span>`;
+            }
+
+            return html;
+        }
+        function getAlarmSeverity(seconds) {
+
+            if (seconds > 600) return "badge-red";      // >10 min
+            if (seconds > 120) return "badge-orange";   // >2 min
+            return "badge-yellow";
+        }
+
+        function stripHtml(value) {
+            const div = document.createElement("div");
+            div.innerHTML = value ?? "";
+            return div.textContent || div.innerText || "";
+        }
+
+        function getTrendSignals(rows) {
+            const pickFirstMatch = (options) => {
+                for (const option of options) {
+                    const match = rows.find(r =>
+                        getSignalName(r.topic).toLowerCase().includes(option)
+                    );
+                    if (match) return getSignalName(match.topic);
+                }
+                return null;
+            };
+
+            return {
+                temperature: pickFirstMatch(["temperature", "temp"]),
+                vibration: pickFirstMatch(["vibration"]),
+                speed: pickFirstMatch(["speed"]),
+                pressure: pickFirstMatch(["pressure"])
+            };
+        }
+
+        function renderSparkline(canvasId, points) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+
+            const ctx = canvas.getContext("2d");
+            const width = canvas.width;
+            const height = canvas.height;
+
+            ctx.clearRect(0, 0, width, height);
+
+            if (!points || points.length < 2) {
+                ctx.fillStyle = "#999";
+                ctx.font = "12px Arial";
+                ctx.fillText("No trend yet", 10, 20);
+                return;
+            }
+
+            const values = points.map(p => p.value);
+            const min = Math.min(...values);
+            const max = Math.max(...values);
+            const range = max - min || 1;
+
+            ctx.beginPath();
+
+            points.forEach((p, i) => {
+                const x = (i / (points.length - 1)) * (width - 20) + 10;
+                const y = height - 10 - ((p.value - min) / range) * (height - 20);
+
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+
+            ctx.strokeStyle = "#2563eb";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.fillStyle = "#666";
+            ctx.font = "11px Arial";
+            ctx.fillText(`min ${min.toFixed(1)}`, 10, height - 2);
+            ctx.fillText(`max ${max.toFixed(1)}`, width - 60, 12);
+        }
+
+        async function renderTrend(canvasId, equipment, signal) {
+
+            if (!signal) {
+                renderSparkline(canvasId, []);
+                return;
+            }
+
+            const response = await fetch(
+                `/api/points/history/by-signal?equipment=${encodeURIComponent(equipment)}&signal=${encodeURIComponent(signal)}&minutes=30`
+            );
+
+            if (!response.ok) {
+                renderSparkline(canvasId, []);
+                return;
+            }
+
+            const history = await response.json();
+
+            renderSparkline(
+                canvasId,
+                history.map(x => ({
+                    value: x.valueNumber
+                }))
+            );
+        }
+
+        async function renderDetailPanel() {
+            const panel = document.getElementById("detailPanel");
+
+            if (!selectedEquipment) {
+                panel.innerHTML = `<div class="detail-empty">Select a machine</div>`;
+                return;
+            }
+
+            const grouped = groupByEquipment(latestRows);
+            const rows = grouped[selectedEquipment];
+
+            if (!rows || !rows.length) {
+                panel.innerHTML = `<div class="detail-empty">No data for selected machine</div>`;
+                return;
+            }
+
+            const summary = getEquipmentSummary(rows, selectedEquipment);
+
+            const stopCount24hText =
+                `${summary.stopCount24h} stops in last 24h`;
+
+            const alarmCount24hText =
+                `${summary.alarmCount24h} alarms in last 24h`;
+
+            const latestEventText =
+                !summary.latestEvent
+                    ? "Latest event: none"
+                    : `Latest event: ${summary.latestEvent.eventType}${summary.latestEvent.eventName
+                        ? " - " + summary.latestEvent.eventName
+                        : ""
+                    } (${summary.latestEvent.state})`;
+
+            const longestAlarmText =
+                !summary.longestCurrentAlarm
+                    ? "Longest current alarm: none"
+                    : `Longest current alarm: ${summary.longestCurrentAlarm.eventName
+                    } (${formatDuration(summary.longestCurrentAlarm.durationSeconds)})`;
+
+            const latestTimestamp = rows
+                .map(r => r.timestampUtc)
+                .filter(Boolean)
+                .sort()
+                .reverse()[0] ?? "Unknown";
+
+            const firstSource = rows[0]?.source ?? "Unknown";
+
+            let stateText = "Unknown";
+            if (summary.isOffline) stateText = "Offline";
+            else if (summary.hasAlarm) stateText = "Alarm";
+            else if (summary.isHot) stateText = "Warm";
+            else if (summary.isRunning === true) stateText = "Running";
+            else if (summary.isRunning === false) stateText = "Stopped";
+
+            const signalHtml = rows
+                .slice()
+                .sort((a, b) => getSignalName(a.topic).localeCompare(getSignalName(b.topic)))
+                .map(r => `
+                        <div class="detail-label">${getSignalName(r.topic)}</div>
+                        <div class="detail-value">${stripHtml(formatValue(r.topic, r.value))}</div>
+                    `)
+                .join("");
+
+            const trendSignals = getTrendSignals(rows);
+            const alarmStatus = await loadAlarmStatus(selectedEquipment);
+            const offlineStatus = await loadOfflineStatus(selectedEquipment);
+
+            panel.innerHTML = `
+                    <div class="detail-title">${selectedEquipment.toUpperCase()}</div>
+                    <div class="detail-meta">Status: ${stateText}</div>
+                    <div class="detail-meta">Last update: ${latestTimestamp}</div>
+                    <div class="detail-meta">Source: ${firstSource}</div>
+                    <div class="detail-meta">
+                    <div class="detail-meta">${stopCount24hText}</div>
+                    <div class="detail-meta">${alarmCount24hText}</div>
+                    <div class="detail-meta">${latestEventText}</div>
+                    <div class="detail-meta">${longestAlarmText}</div>
+            ${
+                !alarmStatus || !alarmStatus.hasAlarmData
+                    ? "Alarm: no history"
+                    : alarmStatus.isAlarmActive
+                        ? `Alarm active: ${formatDuration(alarmStatus.alarmActiveSeconds)}`
+                        : alarmStatus.lastAlarmSecondsAgo != null
+                            ? `Last alarm: ${formatDuration(alarmStatus.lastAlarmSecondsAgo)} ago`
+                            : "Last alarm: none"
+    }
+                    </div>
+
+                    <div class="detail-meta">
+${
+                !offlineStatus || !offlineStatus.hasRunData
+                    ? "Offline: no history"
+                    : offlineStatus.isOffline
+                        ? `Offline: ${formatDuration(offlineStatus.offlineSeconds)}`
+                        : offlineStatus.lastOfflineSecondsAgo != null
+                            ? `Last stopped: ${formatDuration(offlineStatus.lastOfflineSecondsAgo)} ago`
+                            : "Last stopped: none"
+}
+</div>
+
+                    <hr style="border:none;border-top:1px solid #e5e7eb;margin:12px 0;">
+
+                    <div class="detail-grid">
+                        ${signalHtml}
+                    </div>
+
+                    <div class="trend-section">
+                        <div class="trend-title">Mini Trends</div>
+                        <div class="trend-grid">
+                            <div class="trend-card">
+                                <div class="trend-card-title">
+                                    Temperature ${trendSignals.temperature ? `(${trendSignals.temperature})` : ""}
+                                </div>
+                                <canvas id="trendTemp" class="trend-canvas" width="320" height="90"></canvas>
+                            </div>
+
+                            <div class="trend-card">
+                                <div class="trend-card-title">
+                                    Vibration ${trendSignals.vibration ? `(${trendSignals.vibration})` : ""}
+                                </div>
+                                <canvas id="trendVibration" class="trend-canvas" width="320" height="90"></canvas>
+                            </div>
+
+                            <div class="trend-card">
+                                <div class="trend-card-title">
+                                    Speed ${trendSignals.speed ? `(${trendSignals.speed})` : ""}
+                                </div>
+                                <canvas id="trendSpeed" class="trend-canvas" width="320" height="90"></canvas>
+                            </div>
+
+                            <div class="trend-card">
+                                <div class="trend-card-title">
+                                    Pressure ${trendSignals.pressure ? `(${trendSignals.pressure})` : ""}
+                                </div>
+                                <canvas id="trendPressure" class="trend-canvas" width="320" height="90"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+            await renderTrend("trendTemp", selectedEquipment, trendSignals.temperature);
+            await renderTrend("trendVibration", selectedEquipment, trendSignals.vibration);
+            await renderTrend("trendSpeed", selectedEquipment, trendSignals.speed);
+            await renderTrend("trendPressure", selectedEquipment, trendSignals.pressure);
+        }
+
+        function renderRows() {
+            const filter = filterBox ? filterBox.value.toLowerCase() : "";
+
+            const filtered = latestRows.filter(x =>
+                !filter || (x.topic ?? "").toLowerCase().includes(filter)
+            );
+
+            if (!filtered.length) {
+                telemetryBody.innerHTML = `<tr><td colspan="5">No telemetry found</td></tr>`;
+                return;
+            }
+
+            let grouped = groupByEquipment(filtered);
+
+            if (activeEquipmentFilter) {
+                grouped = Object.fromEntries(
+                    Object.entries(grouped).filter(([eq, rows]) => {
+                        const summary = getEquipmentSummary(rows, eq);
+
+                        if (activeEquipmentFilter === "alarm") return summary.hasAlarm;
+                        if (activeEquipmentFilter === "running") return summary.isRunning === true;
+                        if (activeEquipmentFilter === "stopped") return summary.isRunning === false;
+                        if (activeEquipmentFilter === "warm") return summary.isHot;
+
+                        return true;
+                    })
+                );
+            }
+
+            let html = "";
+
+            Object.entries(grouped)
+                .sort((a, b) => {
+                    const summaryA = getEquipmentSummary(a[1], a[0]);
+                    const summaryB = getEquipmentSummary(b[1], b[0]);
+                    return getSeverityRank(summaryA) - getSeverityRank(summaryB);
+                })
+                .forEach(([eq, rows]) => {
+                    const summary = getEquipmentSummary(rows, eq);
+                    const severity = getSeverityRank(summary);
+
+                    const severityColor =
+                        severity === 0 ? "#fde2e2" :
+                            severity === 1 ? "#fee2e2" :
+                                severity === 2 ? "#ffedd5" :
+                                    severity === 3 ? "#e5e7eb" :
+                                        "#eef2ff";
+
+                    html += `
+                <tr>
+                    <td colspan="5"
+                        onclick="selectEquipment('${eq}')"
+                        style="background:${severityColor};font-weight:bold;padding-top:12px;cursor:pointer;">
+                        ${eq.toUpperCase()}
+                        ${renderEquipmentBadges(summary)}
+                    </td>
+                </tr>`;
+
+                    rows.forEach(row => {
+                        html += `
+                    <tr>
+                        <td>${getSignalName(row.topic)}</td>
+                        <td>${formatValue(row.topic, row.value)}</td>
+                        <td>${formatStatus(row.topic, row.value, row.status)}</td>
+                        <td>${formatSource(row.source)}</td>
+                        <td>${row.timestampUtc ?? ""}</td>
+                    </tr>`;
+                    });
+                });
+
+            telemetryBody.innerHTML = html;
+        }
+
+        async function loadTelemetry() {
+            try {
+                const response = await fetch("/api/points/latest");
+                if (!response.ok) {
+                    throw new Error("HTTP " + response.status);
+                }
+
+                latestRows = await response.json();
+
+                await loadEventSummary();
+                recordSignalHistory(latestRows);
+                await updateSummaryBar(latestRows);
+                renderRows();
+                await renderDetailPanel();
+
+                lastTelemetryUpdate = Date.now();
+                updateHeartbeat();
+
+                statusText.textContent =
+                    "Last refresh: " + new Date().toLocaleTimeString() +
+                    " | Rows: " + latestRows.length;
+            } catch (err) {
+                telemetryBody.innerHTML = `<tr><td colspan="5">Telemetry load failed</td></tr>`;
+                statusText.textContent = err.message;
+            }
+        }
+
+        async function loadSummaryMetrics() {
+            const response = await fetch("/api/equipment/summary-metrics");
+
+            if (!response.ok) return null;
+
+            return await response.json();
+        }
+
+        function formatDuration(seconds) {
+            if (seconds == null || seconds < 0) return "n/a";
+
+            if (seconds < 60) return `${seconds}s`;
+
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+
+            if (minutes < 60) return `${minutes}m ${remainingSeconds}s`;
+
+            const hours = Math.floor(minutes / 60);
+            const remainingMinutes = minutes % 60;
+
+            return `${hours}h ${remainingMinutes}m`;
+        }
+
+        async function loadAlarmStatus(equipment) {
+            const response = await fetch(
+                `/api/equipment/alarm-status?equipment=${encodeURIComponent(equipment)}`
+            );
+
+            if (!response.ok) {
+                return null;
+            }
+
+            return await response.json();
+        }
+
+        async function loadOfflineStatus(equipment) {
+            const response = await fetch(
+                `/api/equipment/offline-status?equipment=${encodeURIComponent(equipment)}`
+            );
+
+            if (!response.ok) return null;
+
+            return await response.json();
+        }
+
+        function formatValue(topic, value) {
+            topic = (topic ?? "").toLowerCase();
+            const stringValue = String(value ?? "").toLowerCase();
+
+            if (topic.includes("alarm")) {
+                return stringValue === "true"
+                    ? `<span class="badge badge-red">alarm</span>`
+                    : `<span class="badge badge-gray">normal</span>`;
+            }
+
+            if (topic.includes("run-status")) {
+                return stringValue === "true"
+                    ? `<span class="badge badge-green">running</span>`
+                    : `<span class="badge badge-gray">stopped</span>`;
+            }
+
+            if (topic.includes("temperature")) {
+                const n = parseFloat(value);
+                if (!isNaN(n)) {
+                    if (n >= 80) return `<span class="badge badge-red">${value}</span>`;
+                    if (n >= 70) return `<span class="badge badge-orange">${value}</span>`;
+                }
+            }
+
+            return value ?? "";
+        }
+
+        function formatStatus(topic, value, status) {
+            topic = (topic ?? "").toLowerCase();
+            const stringValue = String(value ?? "").toLowerCase();
+
+            if (topic.includes("alarm") && stringValue === "true") {
+                return `<span class="badge badge-red">Alarm Active</span>`;
+            }
+
+            if (topic.includes("run-status")) {
+                return stringValue === "true"
+                    ? `<span class="badge badge-green">Running</span>`
+                    : `<span class="badge badge-gray">Stopped</span>`;
+            }
+
+            return `<span class="badge badge-gray">${status ?? ""}</span>`;
+        }
+
+        function updateHeartbeat() {
+            const dot = document.getElementById("heartbeatDot");
+            const text = document.getElementById("heartbeatText");
+
+            if (!lastTelemetryUpdate) {
+                dot.className = "heartbeat-dot heartbeat-red";
+                text.textContent = "No data yet";
+                return;
+            }
+
+            const ageSeconds = (Date.now() - lastTelemetryUpdate) / 1000;
+            dot.className = "heartbeat-dot";
+
+            if (ageSeconds <= 5) {
+                dot.classList.add("heartbeat-green");
+                text.textContent = "Live data";
+            } else if (ageSeconds <= 15) {
+                dot.classList.add("heartbeat-amber");
+                text.textContent = "Data delay";
+            } else {
+                dot.classList.add("heartbeat-red");
+                text.textContent = "Connection lost";
+            }
+        }
+
+        async function loadEventSummary() {
+            const response = await fetch("/api/equipment/event-summary");
+            const data = await response.json();
+
+            eventSummaryByEquipment = {};
+
+            data.forEach(item => {
+                eventSummaryByEquipment[(item.equipmentId ?? "").trim().toUpperCase()] = item;
+            });
+        }
+
+        function formatSource(source) {
+            const s = String(source ?? "").toLowerCase();
+
+            if (s === "mqtt") {
+                return `<span class="badge badge-blue">mqtt</span>`;
+            }
+
+            if (s === "simulator") {
+                return `<span class="badge badge-gray">simulator</span>`;
+            }
+
+            return `<span class="badge badge-gray">${source ?? ""}</span>`;
+        }
+
+        if (filterBox) {
+            filterBox.addEventListener("input", renderRows);
+        }
+
+        loadTelemetry();
+        setInterval(loadTelemetry, 3000);
+        setInterval(updateHeartbeat, 1000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "id": "enterprise-profile",
+  "name": "enterprise-standard",
+  "version": "1.0",
+  "entityType": "Enterprise",
+  "description": "Metadata profile for the top-level enterprise node in the ISA-95 hierarchy. The enterprise is the broadest organisational scope and contains one or more sites.",
+  "requiredProperties": [ "id", "name", "displayName", "path" ],
+  "optionalProperties": [ "description", "tags", "profileId" ],
+  "relationships": {
+    "children": "Site"
+  },
+  "telemetryPoints": []
+}

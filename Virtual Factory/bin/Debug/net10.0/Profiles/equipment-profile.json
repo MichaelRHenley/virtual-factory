@@ -1,0 +1,69 @@
+{
+  "id": "equipment-profile",
+  "name": "equipment-standard",
+  "version": "1.0",
+  "entityType": "Equipment",
+  "description": "Metadata profile for individual equipment on a production line. Defines the baseline telemetry points common to most equipment assets. Equipment-specific profiles can extend this profile by adding specialist points.",
+  "requiredProperties": [ "id", "name", "displayName", "path", "parentId" ],
+  "optionalProperties": [ "description", "tags", "profileId" ],
+  "relationships": {
+    "parent": "Line",
+    "children": []
+  },
+  "telemetryPoints": [
+    {
+      "name": "running-state",
+      "displayName": "Running State",
+      "dataType": "bool",
+      "unit": null,
+      "category": "State",
+      "isWritable": false,
+      "description": "Indicates whether the equipment is currently running."
+    },
+    {
+      "name": "fault-code",
+      "displayName": "Fault Code",
+      "dataType": "string",
+      "unit": null,
+      "category": "Diagnostic",
+      "isWritable": false,
+      "description": "Active fault code reported by the equipment. Empty string when no fault is present."
+    },
+    {
+      "name": "motor-temperature",
+      "displayName": "Motor Temperature",
+      "dataType": "double",
+      "unit": "°C",
+      "category": "Telemetry",
+      "isWritable": false,
+      "description": "Temperature of the primary drive motor."
+    },
+    {
+      "name": "speed",
+      "displayName": "Speed",
+      "dataType": "double",
+      "unit": "rpm",
+      "category": "Telemetry",
+      "isWritable": false,
+      "description": "Current operating speed of the equipment."
+    },
+    {
+      "name": "speed-setpoint",
+      "displayName": "Speed Setpoint",
+      "dataType": "double",
+      "unit": "rpm",
+      "category": "Setpoint",
+      "isWritable": true,
+      "description": "Target operating speed. Writable via POST /api/write."
+    },
+    {
+      "name": "cycle-count",
+      "displayName": "Cycle Count",
+      "dataType": "int",
+      "unit": "cycles",
+      "category": "Telemetry",
+      "isWritable": false,
+      "description": "Total number of completed cycles since last reset."
+    }
+  ]
+}

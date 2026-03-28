@@ -1,0 +1,2 @@
+wwwroot\index.html
+C:\Dev\Virtual Factory\Virtual Factory\wwwroot\index.html

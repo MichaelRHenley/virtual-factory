@@ -1,0 +1,122 @@
+[
+  {
+    "id": "evt-01",
+    "topic": "virtual-enterprise/site-alpha/area-assembly/line-a/conveyor-01/motor-temperature",
+    "message": "58.2",
+    "source": "seed",
+    "eventType": "Telemetry",
+    "timestampUtc": "2025-06-01T07:45:00Z",
+    "assetId": "eq-01",
+    "metadata": { "unit": "°C", "quality": "Good" }
+  },
+  {
+    "id": "evt-02",
+    "topic": "virtual-enterprise/site-alpha/area-assembly/line-a/conveyor-01/running-state",
+    "message": "true",
+    "source": "seed",
+    "eventType": "Telemetry",
+    "timestampUtc": "2025-06-01T07:45:01Z",
+    "assetId": "eq-01",
+    "metadata": { "quality": "Good" }
+  },
+  {
+    "id": "evt-03",
+    "topic": "virtual-enterprise/site-alpha/area-assembly/line-a/robot-arm-01/fault-code",
+    "message": "E-047",
+    "source": "seed",
+    "eventType": "Operational",
+    "timestampUtc": "2025-06-01T06:12:30Z",
+    "assetId": "eq-02",
+    "metadata": { "severity": "Warning", "quality": "Good" }
+  },
+  {
+    "id": "evt-04",
+    "topic": "virtual-enterprise/site-alpha/area-assembly/line-b/welding-cell-01/speed",
+    "message": "0",
+    "source": "seed",
+    "eventType": "Telemetry",
+    "timestampUtc": "2025-06-01T05:00:00Z",
+    "assetId": "eq-05",
+    "metadata": { "unit": "rpm", "quality": "Good" }
+  },
+  {
+    "id": "evt-05",
+    "topic": "virtual-enterprise/site-alpha/area-packaging/line-pack-01/labeller-01/running-state",
+    "message": "true",
+    "source": "seed",
+    "eventType": "Telemetry",
+    "timestampUtc": "2025-06-01T08:01:00Z",
+    "assetId": "eq-07",
+    "metadata": { "quality": "Good" }
+  },
+  {
+    "id": "evt-06",
+    "topic": "virtual-enterprise/site-alpha/area-assembly/line-a/inspection-station-01/fault-code",
+    "message": "",
+    "source": "seed",
+    "eventType": "Operational",
+    "timestampUtc": "2025-06-01T08:00:00Z",
+    "assetId": "eq-03",
+    "metadata": { "quality": "Good" }
+  },
+  {
+    "id": "evt-07",
+    "topic": "virtual-enterprise/site-alpha/area-fabrication/line-fab-01/press-brake-01/running-state",
+    "message": "true",
+    "source": "seed",
+    "eventType": "Telemetry",
+    "timestampUtc": "2025-06-01T08:05:00Z",
+    "assetId": "eq-10",
+    "metadata": { "quality": "Good" }
+  },
+  {
+    "id": "evt-08",
+    "topic": "virtual-enterprise/site-alpha/area-fabrication/line-fab-01/laser-cutter-01/motor-temperature",
+    "message": "42.7",
+    "source": "seed",
+    "eventType": "Telemetry",
+    "timestampUtc": "2025-06-01T08:06:00Z",
+    "assetId": "eq-11",
+    "metadata": { "unit": "°C", "quality": "Good" }
+  },
+  {
+    "id": "evt-09",
+    "topic": "virtual-enterprise/site-beta/area-machining/line-c/lathe-01/speed",
+    "message": "1200",
+    "source": "seed",
+    "eventType": "Telemetry",
+    "timestampUtc": "2025-06-01T08:10:00Z",
+    "assetId": "eq-13",
+    "metadata": { "unit": "rpm", "quality": "Good" }
+  },
+  {
+    "id": "evt-10",
+    "topic": "virtual-enterprise/site-beta/area-machining/line-c/cnc-mill-01/fault-code",
+    "message": "W-012",
+    "source": "seed",
+    "eventType": "Operational",
+    "timestampUtc": "2025-06-01T07:58:00Z",
+    "assetId": "eq-14",
+    "metadata": { "severity": "Warning", "quality": "Good" }
+  },
+  {
+    "id": "evt-11",
+    "topic": "virtual-enterprise/site-beta/area-quality/line-qc-01/cmm-01/running-state",
+    "message": "false",
+    "source": "seed",
+    "eventType": "Telemetry",
+    "timestampUtc": "2025-06-01T07:00:00Z",
+    "assetId": "eq-16",
+    "metadata": { "quality": "Good" }
+  },
+  {
+    "id": "evt-12",
+    "topic": "virtual-enterprise/site-beta/area-machining/line-c/deburring-station-01/cycle-count",
+    "message": "4071",
+    "source": "seed",
+    "eventType": "Telemetry",
+    "timestampUtc": "2025-06-01T08:00:00Z",
+    "assetId": "eq-15",
+    "metadata": { "quality": "Good" }
+  }
+]

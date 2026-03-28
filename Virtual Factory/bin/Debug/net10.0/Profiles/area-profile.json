@@ -1,0 +1,14 @@
+{
+  "id": "area-profile",
+  "name": "area-standard",
+  "version": "1.0",
+  "entityType": "Area",
+  "description": "Metadata profile for a functional zone within a manufacturing site (e.g. assembly, packaging, utilities). An area groups one or more production lines under a common operational scope.",
+  "requiredProperties": [ "id", "name", "displayName", "path", "parentId" ],
+  "optionalProperties": [ "description", "tags", "profileId" ],
+  "relationships": {
+    "parent": "Site",
+    "children": "Line"
+  },
+  "telemetryPoints": []
+}

@@ -1,0 +1,134 @@
+[
+  {
+    "id": "sch-01",
+    "assetId": "line-01",
+    "scheduleType": "Shift",
+    "title": "Morning Shift – Assembly Line A",
+    "startUtc": "2025-06-02T06:00:00Z",
+    "endUtc": "2025-06-02T14:00:00Z",
+    "status": "Scheduled",
+    "description": "Day-shift production window for Assembly Line A.",
+    "metadata": { "shift": "morning", "crew": "alpha" }
+  },
+  {
+    "id": "sch-02",
+    "assetId": "line-01",
+    "scheduleType": "Shift",
+    "title": "Afternoon Shift – Assembly Line A",
+    "startUtc": "2025-06-02T14:00:00Z",
+    "endUtc": "2025-06-02T22:00:00Z",
+    "status": "Scheduled",
+    "description": "Afternoon-shift production window for Assembly Line A.",
+    "metadata": { "shift": "afternoon", "crew": "bravo" }
+  },
+  {
+    "id": "sch-03",
+    "assetId": "line-02",
+    "scheduleType": "Production",
+    "title": "PO-2025-00003 – Assembly Line B run",
+    "startUtc": "2025-06-02T06:00:00Z",
+    "endUtc": "2025-06-02T14:00:00Z",
+    "status": "Scheduled",
+    "description": "Scheduled production run linked to production order PO-2025-00003.",
+    "metadata": { "productionOrderId": "po-03", "productCode": "PROD-FRAME-A" }
+  },
+  {
+    "id": "sch-04",
+    "assetId": "eq-05",
+    "scheduleType": "Maintenance",
+    "title": "Welding Cell 01 planned maintenance window",
+    "startUtc": "2025-06-03T00:00:00Z",
+    "endUtc": "2025-06-03T04:00:00Z",
+    "status": "Scheduled",
+    "description": "Planned preventive maintenance window. Line B will be offline.",
+    "metadata": { "workOrderId": "wo-03" }
+  },
+  {
+    "id": "sch-05",
+    "assetId": "line-03",
+    "scheduleType": "Shift",
+    "title": "Morning Shift – Packaging Line 1",
+    "startUtc": "2025-06-02T07:00:00Z",
+    "endUtc": "2025-06-02T15:00:00Z",
+    "status": "Scheduled",
+    "description": "Single-shift packaging window for finished goods from Assembly.",
+    "metadata": { "shift": "morning", "crew": "delta" }
+  },
+  {
+    "id": "sch-06",
+    "assetId": "line-01",
+    "scheduleType": "Inspection",
+    "title": "Assembly Line A – weekly safety inspection",
+    "startUtc": "2025-06-06T05:00:00Z",
+    "endUtc": "2025-06-06T06:00:00Z",
+    "status": "Scheduled",
+    "description": "Weekly safety and guarding inspection before first shift.",
+    "metadata": { "inspector": "HSE-T01" }
+  },
+  {
+    "id": "sch-07",
+    "assetId": "line-04",
+    "scheduleType": "Shift",
+    "title": "Morning Shift – Fabrication Line 1",
+    "startUtc": "2025-06-02T06:00:00Z",
+    "endUtc": "2025-06-02T14:00:00Z",
+    "status": "Scheduled",
+    "description": "Day-shift production window for Fabrication Line 1.",
+    "metadata": { "shift": "morning", "crew": "echo" }
+  },
+  {
+    "id": "sch-08",
+    "assetId": "line-05",
+    "scheduleType": "Shift",
+    "title": "Morning Shift – Machining Line C",
+    "startUtc": "2025-06-02T06:00:00Z",
+    "endUtc": "2025-06-02T14:00:00Z",
+    "status": "Scheduled",
+    "description": "Day-shift production window for Machining Line C at site-beta.",
+    "metadata": { "shift": "morning", "crew": "foxtrot" }
+  },
+  {
+    "id": "sch-09",
+    "assetId": "line-06",
+    "scheduleType": "Shift",
+    "title": "Morning Shift – Quality Control Line 1",
+    "startUtc": "2025-06-02T07:00:00Z",
+    "endUtc": "2025-06-02T15:00:00Z",
+    "status": "Scheduled",
+    "description": "Day-shift inspection window for Quality Control Line 1 at site-beta.",
+    "metadata": { "shift": "morning", "crew": "golf" }
+  },
+  {
+    "id": "sch-10",
+    "assetId": "eq-14",
+    "scheduleType": "Maintenance",
+    "title": "CNC Mill 01 spindle service window",
+    "startUtc": "2025-05-26T06:00:00Z",
+    "endUtc": "2025-05-26T12:00:00Z",
+    "status": "Scheduled",
+    "description": "Planned maintenance window for CNC Mill 01 spindle bearing service. Line C will be offline.",
+    "metadata": { "workOrderId": "wo-09" }
+  },
+  {
+    "id": "sch-11",
+    "assetId": "eq-16",
+    "scheduleType": "Maintenance",
+    "title": "CMM 01 annual calibration window",
+    "startUtc": "2025-06-10T08:00:00Z",
+    "endUtc": "2025-06-10T16:00:00Z",
+    "status": "Scheduled",
+    "description": "Full-day window reserved for ISO 10360 calibration by external provider.",
+    "metadata": { "workOrderId": "wo-10" }
+  },
+  {
+    "id": "sch-12",
+    "assetId": "line-04",
+    "scheduleType": "Downtime",
+    "title": "Fabrication Line 1 – laser assist gas supply changeover",
+    "startUtc": "2025-06-04T22:00:00Z",
+    "endUtc": "2025-06-05T02:00:00Z",
+    "status": "Scheduled",
+    "description": "Planned downtime for nitrogen supply cylinder bank changeover serving Laser Cutter 01.",
+    "metadata": { "reason": "gas-changeover", "affectedEquipment": "eq-11" }
+  }
+]

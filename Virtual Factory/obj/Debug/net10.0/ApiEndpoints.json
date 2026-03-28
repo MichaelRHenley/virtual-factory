@@ -1,0 +1,274 @@
+[
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.AssetEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapAssetEndpoints\u003Eb__0_0",
+    "RelativePath": "api/assets",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.AssetEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapAssetEndpoints\u003Eb__0_1",
+    "RelativePath": "api/assets/{id}",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.AssetEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapAssetEndpoints\u003Eb__0_2",
+    "RelativePath": "api/assets/{id}/children",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.AssetEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapAssetEndpoints\u003Eb__0_3",
+    "RelativePath": "api/assets/{id}/points",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.AssetEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapAssetEndpoints\u003Eb__0_4",
+    "RelativePath": "api/browse",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "path",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.TelemetryEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapTelemetryEndpoints\u003Eb__0_6",
+    "RelativePath": "api/equipment/alarm-status",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "equipment",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.EquipmentEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapEquipmentEndpoints\u003Eb__0_0",
+    "RelativePath": "api/equipment/event-summary",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.TelemetryEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapTelemetryEndpoints\u003Eb__0_4",
+    "RelativePath": "api/equipment/offline-status",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "equipment",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.TelemetryEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapTelemetryEndpoints\u003Eb__0_5",
+    "RelativePath": "api/equipment/summary-metrics",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.TelemetryEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapTelemetryEndpoints\u003Eb__0_3",
+    "RelativePath": "api/points/history/by-signal",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "equipment",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "signal",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "minutes",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.TelemetryEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapTelemetryEndpoints\u003Eb__0_0",
+    "RelativePath": "api/points/latest",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.TelemetryEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapTelemetryEndpoints\u003Eb__0_1",
+    "RelativePath": "api/read",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "topic",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.TelemetryEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapTelemetryEndpoints\u003Eb__0_2",
+    "RelativePath": "api/write",
+    "HttpMethod": "POST",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "Virtual_Factory.Dtos.WritePointRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  }
+]

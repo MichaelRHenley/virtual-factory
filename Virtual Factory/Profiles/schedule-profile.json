@@ -1,0 +1,15 @@
+{
+  "id": "schedule-profile",
+  "name": "schedule-standard",
+  "version": "1.0",
+  "entityType": "ScheduleEntry",
+  "description": "Metadata profile defining the expected properties and valid values for schedule entries. Schedule entries represent time-bound blocks of production, maintenance, shift, or other factory activity scoped to an asset.",
+  "requiredProperties": [ "id", "assetId", "scheduleType", "title", "startUtc", "endUtc", "status" ],
+  "optionalProperties": [ "description", "metadata" ],
+  "relationships": {
+    "asset": "Asset"
+  },
+  "validScheduleTypes": [ "Production", "Maintenance", "Shift", "Downtime", "Inspection" ],
+  "validStatusValues": [ "Scheduled", "Active", "Complete", "Cancelled" ],
+  "telemetryPoints": []
+}

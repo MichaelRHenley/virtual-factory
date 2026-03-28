@@ -1,0 +1,5 @@
+{
+  "_note": "Default metadata profile. Will be replaced with point-type definitions, unit mappings, and semantic descriptors.",
+  "_schema": "MetadataProfile",
+  "_fields": ["id", "name", "description", "pointTypes", "unitMappings", "semanticDescriptors"]
+}

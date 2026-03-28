@@ -1,0 +1,14 @@
+{
+  "id": "site-profile",
+  "name": "site-standard",
+  "version": "1.0",
+  "entityType": "Site",
+  "description": "Metadata profile for a manufacturing site within the enterprise. A site represents a physical or logical facility containing one or more functional areas.",
+  "requiredProperties": [ "id", "name", "displayName", "path", "parentId" ],
+  "optionalProperties": [ "description", "tags", "profileId" ],
+  "relationships": {
+    "parent": "Enterprise",
+    "children": "Area"
+  },
+  "telemetryPoints": []
+}
