@@ -1,4 +1,5 @@
 ﻿using Virtual_Factory.Data;
+using Virtual_Factory.Infrastructure;
 using Virtual_Factory.Models;
 
 namespace Virtual_Factory.Services
@@ -20,7 +21,7 @@ namespace Virtual_Factory.Services
             var rows = points.Select(p => new TelemetryPointHistory
             {
                 Topic = p.Topic,
-                EquipmentName = GetEquipmentName(p.Topic),
+                EquipmentName = TopicParser.ExtractEquipmentName(p.Topic),
                 SignalName = GetSignalName(p.Topic),
                 ValueText = p.Value?.ToString(),
                 ValueNumber = TryParseNumber(p.Value),
@@ -33,15 +34,6 @@ namespace Virtual_Factory.Services
             _db.TelemetryPointHistories.AddRange(rows);
 
             await _db.SaveChangesAsync();
-        }
-
-        private static string GetEquipmentName(string topic)
-        {
-            if (string.IsNullOrWhiteSpace(topic))
-                return "unknown";
-
-            var parts = topic.Split('/');
-            return parts.Length >= 2 ? parts[^2] : "unknown";
         }
 
         private static string GetSignalName(string topic)

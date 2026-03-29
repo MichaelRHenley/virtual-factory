@@ -20,78 +20,82 @@ namespace Virtual_Factory.Services
             var now = DateTime.UtcNow;
             var cutoff = now.AddHours(-24);
 
-            var rows = await _db.TelemetryPointHistories
+            var recentEvents = await _db.EquipmentStateEvents
                 .AsNoTracking()
-                .Where(x =>
-                    x.TimestampUtc >= cutoff &&
-                    (x.SignalName == "alarm-state" || x.SignalName == "run-status"))
+                .Where(x => x.TimestampUtc >= cutoff)
                 .ToListAsync(cancellationToken);
 
-            var allEquipment = await _db.TelemetryPointHistories
+            var allEquipment = await _db.EquipmentStateEvents
+                .AsNoTracking()
                 .Select(x => x.EquipmentName)
                 .Distinct()
                 .ToListAsync(cancellationToken);
 
-            var groupedRows = rows
-                .GroupBy(x => x.EquipmentName)
-                .ToDictionary(g => g.Key, g => g.ToList());
+            // All alarm-state-changed events (no time filter) ordered chronologically so
+            // FindActiveAlarmStart can walk transitions to locate the unmatched alarm open.
+            // No time filter because an active alarm may have started before the 24h window.
+            var alarmTransitionsByEquipment = (await _db.EquipmentStateEvents
+                .AsNoTracking()
+                .Where(x => x.EventType == "alarm-state-changed")
+                .OrderBy(x => x.TimestampUtc)
+                .ToListAsync(cancellationToken))
+                .GroupBy(x => x.EquipmentName, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
 
-            var results = allEquipment.Select(eq =>
+            var groupedRecent = recentEvents
+                .GroupBy(x => x.EquipmentName, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
+
+            var results = allEquipment.Select(equipment =>
             {
-                groupedRows.TryGetValue(eq, out var equipmentRows);
-                equipmentRows ??= new List<TelemetryPointHistory>();
+                groupedRecent.TryGetValue(equipment, out var events);
+                events ??= [];
 
-                var alarmRows = equipmentRows
-                    .Where(x => x.SignalName == "alarm-state")
-                    .OrderBy(x => x.TimestampUtc)
-                    .ToList();
+                var alarmCount = events.Count(x =>
+                    x.EventType == "alarm-state-changed" &&
+                    string.Equals(x.NewState, "alarm", StringComparison.OrdinalIgnoreCase));
 
-                var runRows = equipmentRows
-                    .Where(x => x.SignalName == "run-status")
-                    .OrderBy(x => x.TimestampUtc)
-                    .ToList();
+                var stopCount = events.Count(x =>
+                    x.EventType == "run-state-changed" &&
+                    string.Equals(x.NewState, "stopped", StringComparison.OrdinalIgnoreCase));
 
-                var alarmCount24h = CountAlarmTransitions(alarmRows);
-                var stopCount24h = CountTransitionsToStopped(runRows);
+                var latestSignificant = events
+                    .Where(x => x.EventType is "alarm-state-changed" or "run-state-changed")
+                    .MaxBy(x => x.TimestampUtc);
 
-                var latestRow = equipmentRows
-                    .Where(x => x.SignalName == "alarm-state" || x.SignalName == "run-status")
-                    .OrderByDescending(x => x.TimestampUtc)
-                    .FirstOrDefault();
+                LatestEventDto? latestEventDto = null;
+                if (latestSignificant != null)
+                {
+                    latestEventDto = new LatestEventDto
+                    {
+                        EventType = latestSignificant.EventType == "alarm-state-changed" ? "Alarm" : "Stop",
+                        EventName = latestSignificant.EventType,
+                        State = latestSignificant.NewState ?? "Unknown",
+                        StartTimeUtc = latestSignificant.TimestampUtc,
+                        DurationSeconds = (int)(now - latestSignificant.TimestampUtc).TotalSeconds
+                    };
+                }
 
-                var activeAlarmRow = FindCurrentActiveAlarmStart(alarmRows);
+                CurrentAlarmDto? currentAlarm = null;
+                alarmTransitionsByEquipment.TryGetValue(equipment, out var alarmTransitions);
+                var activeAlarmStart = FindActiveAlarmStart(alarmTransitions);
+                if (activeAlarmStart.HasValue)
+                {
+                    currentAlarm = new CurrentAlarmDto
+                    {
+                        EventName = "Alarm",
+                        StartTimeUtc = activeAlarmStart.Value,
+                        DurationSeconds = (int)(now - activeAlarmStart.Value).TotalSeconds
+                    };
+                }
 
                 return new EquipmentEventSummaryDto
                 {
-                    EquipmentId = eq,
-                    StopCount24h = stopCount24h,
-                    AlarmCount24h = alarmCount24h,
-
-                    LatestEvent = latestRow == null ? null :
-                        new LatestEventDto
-                        {
-                            EventType = latestRow.SignalName == "alarm-state"
-                                ? "Alarm"
-                                : "Stop",
-
-                            EventName = latestRow.SignalName,
-                            State = NormalizeState(
-                                latestRow.SignalName,
-                                latestRow.ValueText),
-
-                            StartTimeUtc = latestRow.TimestampUtc,
-                            DurationSeconds = 0
-                        },
-
-                    LongestCurrentAlarm = activeAlarmRow == null ? null :
-                        new CurrentAlarmDto
-                        {
-                            EventName = "Alarm",
-                            StartTimeUtc = activeAlarmRow.TimestampUtc,
-                            DurationSeconds =
-                                (int)(now - activeAlarmRow.TimestampUtc)
-                                .TotalSeconds
-                        }
+                    EquipmentId = equipment,
+                    AlarmCount24h = alarmCount,
+                    StopCount24h = stopCount,
+                    LatestEvent = latestEventDto,
+                    LongestCurrentAlarm = currentAlarm
                 };
             })
             .OrderBy(x => x.EquipmentId)
@@ -100,107 +104,75 @@ namespace Virtual_Factory.Services
             return results;
         }
 
-        private static int CountAlarmTransitions(List<TelemetryPointHistory> rows)
+        /// <summary>
+        /// Walks alarm transitions in chronological order and returns the start timestamp
+        /// of the currently active alarm period, or null if no alarm is active.
+        /// Each "alarm" transition opens a period; each non-alarm transition closes it.
+        /// </summary>
+        private static DateTime? FindActiveAlarmStart(List<EquipmentStateEvent>? transitions)
         {
-            int count = 0;
-            bool previousActive = false;
-
-            foreach (var row in rows.OrderBy(x => x.TimestampUtc))
-            {
-                bool currentActive =
-                    (row.ValueText ?? "").Trim().ToLowerInvariant() switch
-                    {
-                        "true" => true,
-                        "alarm" => true,
-                        "active" => true,
-                        _ => false
-                    };
-
-                if (currentActive && !previousActive)
-                    count++;
-
-                previousActive = currentActive;
-            }
-
-            return count;
-        }
-
-        private static TelemetryPointHistory? FindCurrentActiveAlarmStart(List<TelemetryPointHistory> alarmRows)
-        {
-            if (alarmRows == null || alarmRows.Count == 0)
+            if (transitions is null)
                 return null;
 
-            var ordered = alarmRows
-                .OrderBy(x => x.TimestampUtc)
-                .ToList();
+            DateTime? alarmStart = null;
 
-            var latest = ordered.LastOrDefault();
-            if (latest == null || !IsAlarmActive(latest.ValueText))
-                return null;
-
-            TelemetryPointHistory? activeStart = null;
-            bool previousActive = false;
-
-            foreach (var row in ordered)
+            foreach (var t in transitions) // ordered ascending by TimestampUtc
             {
-                bool currentActive = IsAlarmActive(row.ValueText);
+                if (string.Equals(t.NewState, "alarm", StringComparison.OrdinalIgnoreCase))
+                    alarmStart = t.TimestampUtc;
+                else
+                    alarmStart = null;
+            }
 
-                if (currentActive && !previousActive)
+            return alarmStart;
+        }
+
+        public async Task<List<EquipmentEventTimelineItemDto>> GetTimelineAsync(
+    string equipmentId,
+    int hours = 24,
+    CancellationToken cancellationToken = default)
+        {
+            var cutoff = DateTime.UtcNow.AddHours(-hours);
+
+            var events = await _db.EquipmentStateEvents
+                .AsNoTracking()
+                .Where(x =>
+                    x.EquipmentName == equipmentId &&
+                    x.TimestampUtc >= cutoff)
+                .OrderByDescending(x => x.TimestampUtc)
+                .ToListAsync(cancellationToken);
+
+            var results = new List<EquipmentEventTimelineItemDto>();
+
+            for (int i = 0; i < events.Count; i++)
+            {
+                var current = events[i];
+                var previousOlder = i < events.Count - 1 ? events[i + 1] : null;
+
+                int? durationSeconds = null;
+
+                if (previousOlder != null)
                 {
-                    activeStart = row;
+                    durationSeconds = (int)Math.Round(
+                        (current.TimestampUtc - previousOlder.TimestampUtc)
+                        .TotalSeconds);
                 }
 
-                previousActive = currentActive;
-            }
-
-            return activeStart;
-        }
-
-        private static int CountTransitionsToStopped(List<TelemetryPointHistory> rows)
-        {
-            int count = 0;
-            bool previousStopped = false;
-
-            foreach (var row in rows.OrderBy(x => x.TimestampUtc))
-            {
-                bool currentStopped = IsStopped(row.ValueText);
-
-                if (currentStopped && !previousStopped)
+                results.Add(new EquipmentEventTimelineItemDto
                 {
-                    count++;
-                }
-
-                previousStopped = currentStopped;
+                    Id = current.Id,
+                    EquipmentId = current.EquipmentName,
+                    EventType = current.EventType,
+                    NewState = current.NewState,
+                    PreviousState = current.PreviousState,
+                    Source = current.Source,
+                    TimestampUtc = current.TimestampUtc,
+                    DurationSeconds = durationSeconds
+                });
             }
 
-            return count;
+            return results;
         }
 
-        private static bool IsAlarmActive(string? valueText)
-        {
-            var value = (valueText ?? "").Trim().ToLowerInvariant();
-            return value == "true" || value == "alarm" || value == "active";
-        }
-
-        private static bool IsStopped(string? valueText)
-        {
-            var value = (valueText ?? "").Trim().ToLowerInvariant();
-            return value == "false" || value == "stopped";
-        }
-
-        private static string NormalizeState(string signalName, string? valueText)
-        {
-            if (signalName == "alarm-state")
-            {
-                return IsAlarmActive(valueText) ? "Active" : "Cleared";
-            }
-
-            if (signalName == "run-status")
-            {
-                return IsStopped(valueText) ? "Stopped" : "Running";
-            }
-
-            return valueText ?? "Unknown";
-        }
     }
 }

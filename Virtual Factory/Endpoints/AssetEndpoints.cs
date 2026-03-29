@@ -1,6 +1,7 @@
 using Virtual_Factory.Dtos;
 using Virtual_Factory.Models;
 using Virtual_Factory.Repositories;
+using Virtual_Factory.Services;
 
 namespace Virtual_Factory.Endpoints
 {
@@ -41,6 +42,25 @@ namespace Virtual_Factory.Endpoints
                 var children = assets.GetChildren(asset.Id).Select(ToDto).ToList();
                 return Results.Ok(new BrowseResultDto(ToDto(asset), children));
             });
+
+            app.MapGet("/api/assets/hierarchy",
+    (ILatestPointValueStore store, IAssetHierarchyService hierarchyService) =>
+    {
+        var points = store.GetAll().ToList();
+
+        Console.WriteLine($"Hierarchy endpoint points count: {points.Count}");
+
+        foreach (var p in points.Take(10))
+        {
+            Console.WriteLine($"Topic: {p.Topic}");
+        }
+
+        var hierarchy = hierarchyService.BuildHierarchy(points);
+
+        Console.WriteLine($"Hierarchy site count: {hierarchy.Count}");
+
+        return Results.Ok(hierarchy);
+    });
 
             return app;
         }

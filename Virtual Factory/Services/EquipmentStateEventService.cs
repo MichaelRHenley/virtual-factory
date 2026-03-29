@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
+using Virtual_Factory.Data;
+using Virtual_Factory.Infrastructure;
 
 namespace Virtual_Factory.Services
 {
@@ -15,6 +18,8 @@ namespace Virtual_Factory.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            await SeedLastStatesAsync(stoppingToken);
+
             using var timer = new PeriodicTimer(TimeSpan.FromSeconds(3));
 
             while (!stoppingToken.IsCancellationRequested)
@@ -31,7 +36,7 @@ namespace Virtual_Factory.Services
                     continue;
 
                 var grouped = latest
-                    .GroupBy(x => GetEquipmentName(x.Topic), StringComparer.OrdinalIgnoreCase);
+                    .GroupBy(x => TopicParser.ExtractEquipmentName(x.Topic), StringComparer.OrdinalIgnoreCase);
 
                 foreach (var group in grouped)
                 {
@@ -86,13 +91,46 @@ namespace Virtual_Factory.Services
             }
         }
 
-        private static string GetEquipmentName(string? topic)
+        private async Task SeedLastStatesAsync(CancellationToken cancellationToken)
         {
-            if (string.IsNullOrWhiteSpace(topic))
-                return "unknown";
+            using var scope = _scopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-            var parts = topic.Split('/', StringSplitOptions.RemoveEmptyEntries);
-            return parts.Length >= 2 ? parts[^2] : "unknown";
+            var allEvents = await db.EquipmentStateEvents
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
+
+            if (allEvents.Count == 0)
+                return;
+
+            foreach (var group in allEvents.GroupBy(e => e.EquipmentName, StringComparer.OrdinalIgnoreCase))
+            {
+                var snapshot = new EquipmentStateSnapshot
+                {
+                    EquipmentName = group.Key,
+                    TimestampUtc = group.Max(e => e.TimestampUtc)
+                };
+
+                var latestRun = group
+                    .Where(e => e.EventType == "run-state-changed")
+                    .MaxBy(e => e.TimestampUtc);
+                if (latestRun?.NewState is not null)
+                    snapshot.RunState = latestRun.NewState;
+
+                var latestAlarm = group
+                    .Where(e => e.EventType == "alarm-state-changed")
+                    .MaxBy(e => e.TimestampUtc);
+                if (latestAlarm?.NewState is not null)
+                    snapshot.AlarmState = latestAlarm.NewState;
+
+                var latestConnectivity = group
+                    .Where(e => e.EventType == "connectivity-state-changed")
+                    .MaxBy(e => e.TimestampUtc);
+                if (latestConnectivity?.NewState is not null)
+                    snapshot.ConnectivityState = latestConnectivity.NewState;
+
+                _lastStates[group.Key] = snapshot;
+            }
         }
     }
 }

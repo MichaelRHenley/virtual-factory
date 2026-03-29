@@ -179,43 +179,38 @@ namespace Virtual_Factory.Endpoints
         AppDbContext db,
         CancellationToken cancellationToken) =>
     {
-        var now = DateTime.UtcNow;
-
-        var alarmRows = await db.TelemetryPointHistories
-            .AsNoTracking()
-            .Where(x => x.SignalName == "alarm-state")
-            .GroupBy(x => x.EquipmentName)
-            .Select(g => g
-                .OrderByDescending(x => x.TimestampUtc)
-                .First())
-            .ToListAsync(cancellationToken);
-
-        var stoppedRows = await db.TelemetryPointHistories
-            .AsNoTracking()
-            .Where(x => x.SignalName == "run-status")
-            .GroupBy(x => x.EquipmentName)
-            .Select(g => g
-                .OrderByDescending(x => x.TimestampUtc)
-                .First())
-            .ToListAsync(cancellationToken);
-
-        var lastAlarm = alarmRows
-            .Where(x => x.ValueText == "true")
-            .Select(x => (int?)(now - x.TimestampUtc).TotalSeconds)
-            .DefaultIfEmpty(null)
-            .Min();
-
-        var lastStopped = stoppedRows
-            .Where(x => x.ValueText == "stopped")
-            .Select(x => (int?)(now - x.TimestampUtc).TotalSeconds)
-            .DefaultIfEmpty(null)
-            .Min();
-
-        return Results.Ok(new
+        try
         {
-            lastAlarmSecondsAgo = lastAlarm,
-            lastStoppedSecondsAgo = lastStopped
-        });
+            var now = DateTime.UtcNow;
+
+            var lastAlarmTimestamp = await db.EquipmentStateEvents
+                .AsNoTracking()
+                .Where(x => x.EventType == "alarm-state-changed" && x.NewState == "alarm")
+                .OrderByDescending(x => x.TimestampUtc)
+                .Select(x => (DateTime?)x.TimestampUtc)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            var lastStoppedTimestamp = await db.EquipmentStateEvents
+                .AsNoTracking()
+                .Where(x => x.EventType == "run-state-changed" && x.NewState == "stopped")
+                .OrderByDescending(x => x.TimestampUtc)
+                .Select(x => (DateTime?)x.TimestampUtc)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            return Results.Ok(new
+            {
+                lastAlarmSecondsAgo    = lastAlarmTimestamp.HasValue
+                    ? (int?)(now - lastAlarmTimestamp.Value).TotalSeconds
+                    : null,
+                lastStoppedSecondsAgo  = lastStoppedTimestamp.HasValue
+                    ? (int?)(now - lastStoppedTimestamp.Value).TotalSeconds
+                    : null,
+            });
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            return Results.StatusCode(499);
+        }
     });
 
             app.MapGet("/api/equipment/alarm-status",

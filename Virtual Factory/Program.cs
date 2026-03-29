@@ -10,14 +10,13 @@ builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddVirtualFactoryServices();
-builder.Services.AddHostedService<MqttNamespaceService>();
 builder.Services.AddScoped<TelemetryHistoryWriter>();
 builder.Services.AddScoped<EquipmentStateEventWriter>();
 builder.Services.AddHostedService<EquipmentStateEventService>();
 builder.Services.AddHostedService<TelemetryHistorySnapshotService>();
-
+builder.Services.AddScoped<IEquipmentAvailabilityService, EquipmentAvailabilityService>();
 builder.Services.AddScoped<IEquipmentEventSummaryService, EquipmentEventSummaryService>();
-
+builder.Services.AddSingleton<IAssetHierarchyService, AssetHierarchyService>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));

@@ -52,7 +52,7 @@
 
         .summary-bar {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(7, 1fr);
             gap: 12px;
             margin-bottom: 16px;
         }
@@ -84,6 +84,18 @@
             color: #c2410c;
         }
 
+        .summary-tile.good .summary-value {
+            color: #16a34a;
+        }
+
+        .summary-tile.warn .summary-value {
+            color: #f59e0b;
+        }
+
+        .summary-tile.bad .summary-value {
+            color: #dc2626;
+        }
+
         .summary-tile.active {
             outline: 2px solid #2563eb;
             background: #eef2ff;
@@ -91,12 +103,22 @@
 
         .dashboard-layout {
             display: grid;
-            grid-template-columns: minmax(0, 2fr) 360px;
+            grid-template-columns: 260px minmax(0, 1fr) 360px;
             gap: 16px;
             align-items: start;
         }
 
         .main-panel {
+            min-width: 0;
+        }
+
+        .sidebar-panel {
+            display: grid;
+            grid-template-rows: minmax(0, 1fr) 220px;
+            gap: 16px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
             min-width: 0;
         }
 
@@ -109,9 +131,8 @@
         }
 
         .detail-panel {
-            min-height: 300px;
-            position: sticky;
-            top: 20px;
+            min-height: 0;
+            overflow-y: auto;
         }
 
         .detail-empty {
@@ -202,7 +223,8 @@
             margin-top: 12px;
         }
 
-        th, td {
+        th,
+        td {
             text-align: left;
             padding: 10px 12px;
             border-bottom: 1px solid #e5e7eb;
@@ -258,6 +280,100 @@
             color: #9a3412;
         }
 
+        .worst-machine-item {
+            padding: 4px 0;
+            border-radius: 6px;
+        }
+
+            .worst-machine-item:hover {
+                background: #f3f4f6;
+                padding-left: 6px;
+            }
+
+        .active-worst-machine {
+            background: #eef2ff;
+            font-weight: 600;
+            padding-left: 6px;
+        }
+
+        #worstMachinesPanel {
+            position: static;
+            max-height: none;
+            overflow: visible;
+            border-top: 3px solid #e5e7eb;
+        }
+
+        .active-equipment-row {
+            outline: 2px solid #2563eb;
+            background: #eef2ff !important;
+        }
+
+        .hierarchy-panel {
+            min-height: 500px;
+            max-height: calc(100vh - 140px);
+            overflow: auto;
+        }
+
+        .panel-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .hierarchy-tree {
+            font-size: 0.95rem;
+        }
+
+        .hierarchy-node {
+            margin-bottom: 4px;
+        }
+
+        .hierarchy-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+            .hierarchy-label:hover {
+                background: #f3f4f6;
+            }
+
+        .hierarchy-children {
+            margin-left: 18px;
+            border-left: 1px solid #e5e7eb;
+            padding-left: 10px;
+            margin-top: 4px;
+        }
+
+        .hierarchy-toggle {
+            width: 14px;
+            display: inline-block;
+            text-align: center;
+            opacity: 0.8;
+        }
+
+        .hierarchy-name {
+            flex: 1;
+        }
+
+        .hierarchy-count {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        .hierarchy-equipment .hierarchy-label {
+            border: 1px solid transparent;
+        }
+
+        .hierarchy-equipment.selected .hierarchy-label {
+            border-color: rgba(100, 180, 255, 0.5);
+            background: rgba(100, 180, 255, 0.15);
+        }
+
         @media (max-width: 1200px) {
             .dashboard-layout {
                 grid-template-columns: 1fr;
@@ -266,9 +382,18 @@
             .detail-panel {
                 position: static;
             }
-        }
 
+            .sidebar-panel {
+                position: static;
+                height: auto;
+            }
+
+            .hierarchy-panel {
+                max-height: 300px;
+            }
+        }
     </style>
+    
 </head>
 <body>
     <h1>Virtual Factory Dashboard</h1>
@@ -285,17 +410,27 @@
             <div class="summary-label">Equipment</div>
         </div>
 
-        <div class="summary-tile" onclick="setEquipmentFilter('running')">
+        <div id="plantAvailabilityTile" class="summary-tile">
+            <div id="plantAvailabilityValue" class="summary-value">--</div>
+            <div class="summary-label">Availability (1h)</div>
+        </div>
+
+        <div id="runningTile" class="summary-tile" onclick="setEquipmentFilter('running')">
             <div id="runningCount" class="summary-value">0</div>
             <div class="summary-label">Running</div>
         </div>
 
-        <div class="summary-tile" onclick="setEquipmentFilter('stopped')">
+        <div id="stoppedTile" class="summary-tile" onclick="setEquipmentFilter('stopped')">
             <div id="stoppedCount" class="summary-value">0</div>
             <div class="summary-label">Stopped</div>
         </div>
 
-        <div class="summary-tile warm" onclick="setEquipmentFilter('warm')">
+        <div id="offlineTile" class="summary-tile" onclick="setEquipmentFilter('offline')">
+            <div id="offlineCount" class="summary-value">0</div>
+            <div class="summary-label">Offline</div>
+        </div>
+
+        <div id="warmTile" class="summary-tile warm" onclick="setEquipmentFilter('warm')">
             <div id="warmCount" class="summary-value">0</div>
             <div class="summary-label">Warm</div>
         </div>
@@ -307,6 +442,12 @@
     </div>
 
     <div class="dashboard-layout">
+        <div class="hierarchy-panel card">
+            <div class="panel-title">Hierarchy Explorer</div>
+            <div id="hierarchyTree" class="hierarchy-tree">
+                <div class="muted">Loading hierarchy...</div>
+            </div>
+        </div>
         <div class="main-panel">
             <div class="card">
                 <div class="controls">
@@ -334,8 +475,14 @@
             </div>
         </div>
 
-        <div id="detailPanel" class="detail-panel">
-            <div class="detail-empty">Select a machine</div>
+        <div class="sidebar-panel">
+            <div id="detailPanel" class="detail-panel">
+                <div class="detail-empty">Select a machine</div>
+            </div>
+
+            <div id="worstMachinesPanel" class="detail-panel">
+                Loading availability ranking...
+            </div>
         </div>
     </div>
 
@@ -351,18 +498,79 @@
         let signalHistory = {};
         let summaryMetrics = null;
         let eventSummaryByEquipment = {};
+        let detectedEquipmentLayer = null;
+        let hierarchyData = [];
+        let hierarchyExpanded = {};
         const MAX_HISTORY_POINTS = 30;
 
         function getEquipmentName(topic) {
             if (!topic) return "unknown";
+
             const parts = topic.split("/");
-            return parts.length >= 2 ? parts[parts.length - 2] : "unknown";
+
+            if (parts.length < 2) return "unknown";
+
+            if (
+                detectedEquipmentLayer != null &&
+                detectedEquipmentLayer >= 0 &&
+                detectedEquipmentLayer < parts.length - 1
+            ) {
+                return parts[detectedEquipmentLayer] ?? "unknown";
+            }
+
+            // Fallback: second-last segment before signal
+            parts.pop();
+            return parts.pop() ?? "unknown";
+        }
+        async function loadHierarchy() {
+            try {
+                const response = await fetch('/api/assets/hierarchy');
+
+                if (!response.ok) {
+                    throw new Error(`Hierarchy request failed: ${response.status}`);
+                }
+
+                hierarchyData = await response.json();
+                renderHierarchy();
+            } catch (err) {
+                console.error('Failed to load hierarchy', err);
+                const tree = document.getElementById('hierarchyTree');
+                if (tree) {
+                    tree.innerHTML = `<div class="muted">Failed to load hierarchy</div>`;
+                }
+            }
+        }
+
+        function renderHierarchy() {
+            const tree = document.getElementById('hierarchyTree');
+            if (!tree) return;
+
+            if (!hierarchyData || hierarchyData.length === 0) {
+                tree.innerHTML = `<div class="muted">No hierarchy discovered</div>`;
+                return;
+            }
+
+            tree.innerHTML = '';
+
+            if (hierarchyData.length === 1) {
+                const site = hierarchyData[0];
+
+                site.areas.forEach(area => {
+                    tree.appendChild(renderAreaNode(site.site, area));
+                });
+            } else {
+                hierarchyData.forEach(site => {
+                    tree.appendChild(renderSiteNode(site));
+                });
+            }
         }
 
         function getSignalName(topic) {
             if (!topic) return "";
+
             const parts = topic.split("/");
-            return parts[parts.length - 1];
+
+            return parts.pop() ?? "";
         }
 
         function groupByEquipment(rows) {
@@ -373,6 +581,22 @@
                 groups[eq].push(row);
             }
             return groups;
+        }
+
+        function validateNamespace(rows) {
+            const sample = rows[0];
+
+            if (!sample || !sample.topic) return;
+
+            const depth = sample.topic.split("/").length;
+
+            console.log("Namespace depth detected:", depth);
+
+            if (depth < 3) {
+                console.warn("Topics are shallow — UNS hierarchy may not be present");
+            }
+
+            console.log("Detected equipment layer:", detectedEquipmentLayer);
         }
 
         function getHistoryKey(eq, signalName) {
@@ -412,6 +636,7 @@
 
             let running = 0;
             let stopped = 0;
+            let offline = 0;
             let alarmed = 0;
             let warm = 0;
 
@@ -421,47 +646,261 @@
             Object.entries(grouped).forEach(([eq, eqRows]) => {
                 const summary = getEquipmentSummary(eqRows, eq);
 
-                if (summary.hasAlarm) alarmed++;
                 if (summary.isRunning === true) running++;
                 if (summary.isRunning === false) stopped++;
+                if (summary.isOffline) offline++;
+                if (summary.hasAlarm) alarmed++;
                 if (summary.isHot) warm++;
             });
 
             document.getElementById("totalCount").textContent = total;
             document.getElementById("runningCount").textContent = running;
             document.getElementById("stoppedCount").textContent = stopped;
- {
-                document.getElementById("alarmCount").textContent = alarmed;
-
-                const alarmTile = document.getElementById("alarmTile");
-
-                const hasActiveAlarm =
-                    Object.values(eventSummaryByEquipment)
-                        .some(x => x.longestCurrentAlarm !== null);
-
-                if (hasActiveAlarm) {
-                    alarmTile.classList.add("alarm");
-                } else {
-                    alarmTile.classList.remove("alarm");
-                }
-            }
+            document.getElementById("offlineCount").textContent = offline;
+            document.getElementById("alarmCount").textContent = alarmed;
             document.getElementById("warmCount").textContent = warm;
 
-            if (summaryMetrics?.lastAlarmSecondsAgo != null) {
-                document.querySelector(".summary-tile.alarm .summary-label")
-                    .textContent =
-                    `Alarmed (last ${formatDuration(summaryMetrics.lastAlarmSecondsAgo)} ago)`;
-            }
+            const stoppedLabel = document.querySelector("#stoppedTile .summary-label");
+            const offlineLabel = document.querySelector("#offlineTile .summary-label");
+            const alarmLabel = document.querySelector("#alarmTile .summary-label");
 
             if (summaryMetrics?.lastStoppedSecondsAgo != null) {
-                document.querySelector(".summary-tile:nth-child(3) .summary-label")
-                    .textContent =
-                    `Stopped (last ${formatDuration(summaryMetrics.lastStoppedSecondsAgo)} ago)`;
+                if (stoppedLabel) {
+                    stoppedLabel.textContent =
+                        `Stopped (last ${formatDuration(summaryMetrics.lastStoppedSecondsAgo)} ago)`;
+                }
+            } else if (stoppedLabel) {
+                stoppedLabel.textContent = "Stopped";
             }
-            if (!summaryMetrics?.lastAlarmSecondsAgo && alarmed === 0) {
-                document.querySelector(".summary-tile.alarm .summary-label")
-                    .textContent = "Alarmed";
+
+            if (summaryMetrics?.lastOfflineSecondsAgo != null) {
+                if (offlineLabel) {
+                    offlineLabel.textContent =
+                        `Offline (last ${formatDuration(summaryMetrics.lastOfflineSecondsAgo)} ago)`;
+                }
+            } else if (offlineLabel) {
+                offlineLabel.textContent = "Offline";
             }
+
+            if (summaryMetrics?.lastAlarmSecondsAgo != null) {
+                if (alarmLabel) {
+                    alarmLabel.textContent =
+                        `Alarmed (last ${formatDuration(summaryMetrics.lastAlarmSecondsAgo)} ago)`;
+                }
+            } else if (alarmLabel) {
+                alarmLabel.textContent = "Alarmed";
+            }
+            const plantAvailability = await loadPlantAvailability(1);
+
+            if (plantAvailability != null) {
+
+                const el = document.getElementById("plantAvailabilityValue");
+
+                el.textContent = plantAvailability.toFixed(1) + "%";
+
+                const tile = document.getElementById("plantAvailabilityTile");
+
+                tile.classList.remove("good", "warn", "bad");
+
+                if (plantAvailability >= 85)
+                    tile.classList.add("good");
+                else if (plantAvailability >= 70)
+                    tile.classList.add("warn");
+                else
+                    tile.classList.add("bad");
+            }
+        }
+
+        async function renderWorstMachines() {
+
+            const availability = await loadAvailabilityAll(1);
+
+            if (!availability.length) return;
+
+            const worst = availability
+                .slice()
+                .sort((a, b) => a.runningPercent - b.runningPercent)
+                .slice(0, 5);
+
+            const html = worst.map(x => {
+                const isSelected =
+                    selectedEquipment &&
+                    selectedEquipment.toUpperCase() === x.equipmentId.toUpperCase();
+
+                return `
+        <div
+            class="detail-meta worst-machine-item ${isSelected ? "active-worst-machine" : ""}"
+            onclick="selectEquipment('${x.equipmentId}')"
+            style="cursor:pointer;">
+            ${x.equipmentId.toUpperCase()} — ${x.runningPercent.toFixed(1)}%
+        </div>
+    `;
+            }).join("");
+
+            const container = document.getElementById("worstMachinesPanel");
+
+            if (container) {
+                container.innerHTML = `
+            <div class="detail-title">Worst Availability (1h)</div>
+            ${html}
+        `;
+            }
+        }
+
+
+        function renderSiteNode(site) {
+            const key = `site:${site.site}`;
+            const equipmentCount = countEquipmentInSite(site);
+
+            return createExpandableNode({
+                key,
+                name: site.site,
+                countText: `${equipmentCount} equipment`,
+                children: site.areas.map(area => renderAreaNode(site.site, area))
+            });
+        }
+
+        function renderAreaNode(siteName, area) {
+            const key = `area:${siteName}:${area.area}`;
+            const equipmentCount = countEquipmentInArea(area);
+
+            return createExpandableNode({
+                key,
+                name: area.area,
+                countText: `${equipmentCount} equipment`,
+                children: area.lines.map(line => renderLineNode(siteName, area.area, line))
+            });
+        }
+
+        function renderLineNode(siteName, areaName, line) {
+            const key = `line:${siteName}:${areaName}:${line.line}`;
+            const equipmentCount = line.equipment.length;
+
+            return createExpandableNode({
+                key,
+                name: line.line,
+                countText: `${equipmentCount} equipment`,
+                children: line.equipment.map(eq => renderEquipmentNode(siteName, areaName, line.line, eq))
+            });
+        }
+
+        function renderEquipmentNode(siteName, areaName, lineName, equipment) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'hierarchy-node hierarchy-equipment';
+
+            if (selectedEquipment === equipment.equipmentName) {
+                wrapper.classList.add('selected');
+            }
+
+            const label = document.createElement('div');
+            label.className = 'hierarchy-label';
+
+            label.innerHTML = `
+        <span class="hierarchy-toggle">•</span>
+        <span class="hierarchy-name">${escapeHtml(equipment.equipmentName)}</span>
+        <span class="hierarchy-count">${equipment.topicCount} topics</span>
+    `;
+
+            label.addEventListener('click', () => {
+                selectedEquipment = equipment.equipmentName;
+
+                renderHierarchy();
+
+                if (typeof renderDetailPanel === 'function') {
+                    renderDetailPanel();
+                }
+
+                if (typeof renderMiniTrends === 'function') {
+                    renderMiniTrends();
+                }
+
+                if (typeof renderTelemetryTable === 'function') {
+                    renderTelemetryTable();
+                }
+
+                if (typeof renderSummaryCards === 'function') {
+                    renderSummaryCards();
+                }
+            });
+
+            wrapper.appendChild(label);
+            return wrapper;
+        }
+
+        function createExpandableNode({ key, name, countText, children }) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'hierarchy-node';
+
+            const expanded = hierarchyExpanded[key] !== false;
+
+            const label = document.createElement('div');
+            label.className = 'hierarchy-label';
+
+            label.innerHTML = `
+        <span class="hierarchy-toggle">${expanded ? '▾' : '▸'}</span>
+        <span class="hierarchy-name">${escapeHtml(name)}</span>
+        <span class="hierarchy-count">${escapeHtml(countText)}</span>
+    `;
+
+            label.addEventListener('click', () => {
+                hierarchyExpanded[key] = !expanded;
+                renderHierarchy();
+            });
+
+            wrapper.appendChild(label);
+
+            if (expanded) {
+                const childrenContainer = document.createElement('div');
+                childrenContainer.className = 'hierarchy-children';
+
+                children.forEach(child => childrenContainer.appendChild(child));
+
+                wrapper.appendChild(childrenContainer);
+            }
+
+            return wrapper;
+        }
+        function countEquipmentInSite(site) {
+            let count = 0;
+            site.areas.forEach(area => {
+                count += countEquipmentInArea(area);
+            });
+            return count;
+        }
+
+        function countEquipmentInArea(area) {
+            let count = 0;
+            area.lines.forEach(line => {
+                count += line.equipment.length;
+            });
+            return count;
+        }
+
+        function escapeHtml(value) {
+            if (value == null) return '';
+            return String(value)
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
+        }
+        async function loadPlantAvailability(hours = 1) {
+
+            const response = await fetch(
+                `/api/equipment/availability?hours=${hours}`
+            );
+
+            if (!response.ok) return null;
+
+            const data = await response.json();
+
+            if (!data.length) return null;
+
+            const avg =
+                data.reduce((sum, x) => sum + x.runningPercent, 0) / data.length;
+
+            return avg;
         }
 
         function setEquipmentFilter(filter) {
@@ -476,20 +915,27 @@
             tiles.forEach(t => t.classList.remove("active"));
 
             if (activeEquipmentFilter) {
-                const tileIndex =
-                    filter === "running" ? 1 :
-                        filter === "stopped" ? 2 :
-                            filter === "warm" ? 3 :
-                                4;
+                const tileId =
+                    filter === "running" ? "runningTile" :
+                        filter === "stopped" ? "stoppedTile" :
+                            filter === "offline" ? "offlineTile" :
+                                filter === "warm" ? "warmTile" :
+                                    filter === "alarm" ? "alarmTile" :
+                                        null;
 
-                tiles[tileIndex].classList.add("active");
+                if (tileId) {
+                    const tile = document.getElementById(tileId);
+                    if (tile) {
+                        tile.classList.add("active");
+                    }
+                }
             }
 
-            if (!filter) {
+            if (!activeEquipmentFilter) {
                 document.querySelectorAll(".summary-tile")
                     .forEach(t => t.classList.remove("active"));
             }
-           
+
             renderRows();
         }
 
@@ -543,6 +989,16 @@
             };
         }
 
+        async function loadAvailability(equipment, hours = 1) {
+            const response = await fetch(
+                `/api/equipment/${encodeURIComponent(equipment)}/state-availability?hours=${hours}`
+            );
+
+            if (!response.ok) return null;
+
+            return await response.json();
+        }
+
         function getSeverityRank(summary) {
             if (summary.isOffline) return 0;
 
@@ -572,8 +1028,23 @@
 
         async function selectEquipment(eq) {
             selectedEquipment = eq;
+
             renderRows();
             await renderDetailPanel();
+            await renderWorstMachines();
+
+            requestAnimationFrame(() => {
+                const row = document.querySelector(
+                    `td[data-equipment="${CSS.escape(eq)}"]`
+                );
+
+                if (row) {
+                    row.scrollIntoView({
+                        behavior: "smooth",
+                        block: "center"
+                    });
+                }
+            });
         }
 
         function renderEquipmentBadges(summary) {
@@ -781,8 +1252,52 @@
                 .join("");
 
             const trendSignals = getTrendSignals(rows);
-            const alarmStatus = await loadAlarmStatus(selectedEquipment);
-            const offlineStatus = await loadOfflineStatus(selectedEquipment);
+            let alarmStatus = null;
+            let offlineStatus = null;
+            let timeline = [];
+
+            try {
+                alarmStatus = await loadAlarmStatus(selectedEquipment);
+            } catch (err) {
+                console.error("loadAlarmStatus failed", err);
+            }
+
+            try {
+                offlineStatus = await loadOfflineStatus(selectedEquipment);
+            } catch (err) {
+                console.error("loadOfflineStatus failed", err);
+            }
+
+            try {
+                timeline = await loadEventTimeline(selectedEquipment, 24);
+            } catch (err) {
+                console.error("loadEventTimeline failed", err);
+            }
+
+            const availability = await loadAvailability(selectedEquipment, 1);
+
+            const availabilityHtml =
+                !availability
+                    ? `<div class="detail-meta">Availability: no data</div>`
+                    : `
+<div class="detail-meta">Running: ${availability.runningPercent.toFixed(1)}%</div>
+<div class="detail-meta">Stopped: ${availability.stoppedPercent.toFixed(1)}%</div>
+<div class="detail-meta">Unknown: ${availability.unknownPercent.toFixed(1)}%</div>
+`;
+
+            const timelineHtml = timeline.length === 0
+                ? `<div class="muted">No recent events</div>`
+                : timeline
+                    .slice(0, 10)
+                    .map(x => `
+    <div class="detail-label">
+        ${x.eventType} | ${x.previousState ?? "?"} → ${x.newState}
+    </div>
+    <div class="detail-value">
+        ${x.timestampUtc}
+    </div>
+`)
+                    .join("");
 
             panel.innerHTML = `
                     <div class="detail-title">${selectedEquipment.toUpperCase()}</div>
@@ -794,6 +1309,7 @@
                     <div class="detail-meta">${alarmCount24hText}</div>
                     <div class="detail-meta">${latestEventText}</div>
                     <div class="detail-meta">${longestAlarmText}</div>
+                    ${availabilityHtml}
             ${
                 !alarmStatus || !alarmStatus.hasAlarmData
                     ? "Alarm: no history"
@@ -822,6 +1338,12 @@ ${
                     <div class="detail-grid">
                         ${signalHtml}
                     </div>
+                    <div class="trend-section">
+    <div class="trend-title">Recent Events</div>
+    <div class="detail-grid">
+        ${timelineHtml}
+    </div>
+</div>
 
                     <div class="trend-section">
                         <div class="trend-title">Mini Trends</div>
@@ -857,6 +1379,8 @@ ${
                     </div>
                 `;
 
+            
+
             await renderTrend("trendTemp", selectedEquipment, trendSignals.temperature);
             await renderTrend("trendVibration", selectedEquipment, trendSignals.vibration);
             await renderTrend("trendSpeed", selectedEquipment, trendSignals.speed);
@@ -885,6 +1409,7 @@ ${
                         if (activeEquipmentFilter === "alarm") return summary.hasAlarm;
                         if (activeEquipmentFilter === "running") return summary.isRunning === true;
                         if (activeEquipmentFilter === "stopped") return summary.isRunning === false;
+                        if (activeEquipmentFilter === "offline") return summary.isOffline;
                         if (activeEquipmentFilter === "warm") return summary.isHot;
 
                         return true;
@@ -912,14 +1437,16 @@ ${
                                         "#eef2ff";
 
                     html += `
-                <tr>
-                    <td colspan="5"
-                        onclick="selectEquipment('${eq}')"
-                        style="background:${severityColor};font-weight:bold;padding-top:12px;cursor:pointer;">
-                        ${eq.toUpperCase()}
-                        ${renderEquipmentBadges(summary)}
-                    </td>
-                </tr>`;
+    <tr>
+        <td colspan="5"
+            data-equipment="${eq}"
+            onclick="selectEquipment('${eq}')"
+            class="${selectedEquipment === eq ? 'active-equipment-row' : ''}"
+            style="background:${severityColor};font-weight:bold;padding-top:12px;cursor:pointer;">
+            ${eq.toUpperCase()}
+            ${renderEquipmentBadges(summary)}
+        </td>
+    </tr>`;
 
                     rows.forEach(row => {
                         html += `
@@ -936,20 +1463,82 @@ ${
             telemetryBody.innerHTML = html;
         }
 
+        function detectEquipmentLayer(rows) {
+            const counts = {};
+
+            rows.forEach(r => {
+                if (!r.topic) return;
+
+                const parts = r.topic.split("/");
+
+                // ignore the last segment because that is usually the signal name
+                for (let i = 0; i < parts.length - 1; i++) {
+                    const segment = parts[i];
+
+                    if (!counts[i]) counts[i] = new Set();
+                    counts[i].add(segment);
+                }
+            });
+
+            let bestIndex = null;
+            let bestScore = Infinity;
+
+            Object.entries(counts).forEach(([index, values]) => {
+                const size = values.size;
+
+                // equipment layer should vary, but not as wildly as full row count
+                if (size > 1 && size < rows.length) {
+                    const score = Math.abs(size - rows.length / 4);
+
+                    if (score < bestScore) {
+                        bestScore = score;
+                        bestIndex = Number(index);
+                    }
+                }
+            });
+
+            return bestIndex;
+        }
+
         async function loadTelemetry() {
             try {
                 const response = await fetch("/api/points/latest");
+
                 if (!response.ok) {
                     throw new Error("HTTP " + response.status);
                 }
 
                 latestRows = await response.json();
 
-                await loadEventSummary();
+                detectedEquipmentLayer = detectEquipmentLayer(latestRows);
+                validateNamespace(latestRows);
+
+                try {
+                    await loadEventSummary();
+                } catch (err) {
+                    console.error("loadEventSummary failed", err);
+                }
+
                 recordSignalHistory(latestRows);
-                await updateSummaryBar(latestRows);
-                renderRows();
-                await renderDetailPanel();
+
+                try {
+                    await updateSummaryBar(latestRows);
+                } catch (err) {
+                    console.error("updateSummaryBar failed", err);
+                }
+
+                try {
+                    renderRows();
+                } catch (err) {
+                    console.error("renderRows failed", err);
+                }
+
+                try {
+                    await renderDetailPanel();
+                    await renderWorstMachines();
+                } catch (err) {
+                    console.error("renderDetailPanel failed", err);
+                }
 
                 lastTelemetryUpdate = Date.now();
                 updateHeartbeat();
@@ -957,7 +1546,9 @@ ${
                 statusText.textContent =
                     "Last refresh: " + new Date().toLocaleTimeString() +
                     " | Rows: " + latestRows.length;
+                await loadHierarchy();
             } catch (err) {
+                console.error("loadTelemetry failed", err);
                 telemetryBody.innerHTML = `<tr><td colspan="5">Telemetry load failed</td></tr>`;
                 statusText.textContent = err.message;
             }
@@ -967,6 +1558,18 @@ ${
             const response = await fetch("/api/equipment/summary-metrics");
 
             if (!response.ok) return null;
+
+            return await response.json();
+        }
+
+        async function loadEventTimeline(equipment, hours = 24) {
+            const response = await fetch(
+                `/api/equipment/${encodeURIComponent(equipment)}/event-timeline?hours=${hours}`
+            );
+
+            if (!response.ok) {
+                return [];
+            }
 
             return await response.json();
         }
@@ -985,6 +1588,16 @@ ${
             const remainingMinutes = minutes % 60;
 
             return `${hours}h ${remainingMinutes}m`;
+        }
+
+        async function loadAvailabilityAll(hours = 1) {
+            const response = await fetch(
+                `/api/equipment/availability?hours=${hours}`
+            );
+
+            if (!response.ok) return [];
+
+            return await response.json();
         }
 
         async function loadAlarmStatus(equipment) {
@@ -1079,14 +1692,34 @@ ${
         }
 
         async function loadEventSummary() {
-            const response = await fetch("/api/equipment/event-summary");
-            const data = await response.json();
+            try {
+                const response = await fetch("/api/equipment/event-summary");
 
-            eventSummaryByEquipment = {};
+                if (!response.ok) {
+                    console.warn("event-summary failed", response.status);
+                    eventSummaryByEquipment = {};
+                    return;
+                }
 
-            data.forEach(item => {
-                eventSummaryByEquipment[(item.equipmentId ?? "").trim().toUpperCase()] = item;
-            });
+                const data = await response.json();
+
+                eventSummaryByEquipment = {};
+
+                if (!Array.isArray(data)) {
+                    console.warn("event-summary was not an array", data);
+                    return;
+                }
+
+                data.forEach(item => {
+                    const key = (item.equipmentId ?? "").trim().toUpperCase();
+                    if (key) {
+                        eventSummaryByEquipment[key] = item;
+                    }
+                });
+            } catch (err) {
+                console.error("loadEventSummary error", err);
+                eventSummaryByEquipment = {};
+            }
         }
 
         function formatSource(source) {
