@@ -3,9 +3,9 @@ namespace Virtual_Factory.Infrastructure
     /// <summary>
     /// Canonical MQTT topic parser for the Virtual Factory namespace.
     /// Supports three topic formats:
-    ///   enterprise/site/area/line/equipment/signal  (6+ segments)
-    ///   site/area/line/equipment/signal             (5+ segments)
-    ///   equipment/signal                            (2+ segments, flat fallback)
+    ///   [prefix-]enterprise/site/area/line/equipment/signal  (6+ segments, first segment ends with "enterprise")
+    ///   site/area/line/equipment/signal                      (5+ segments)
+    ///   equipment/signal                                     (2+ segments, flat fallback)
     /// </summary>
     public static class TopicParser
     {
@@ -21,9 +21,10 @@ namespace Virtual_Factory.Infrastructure
 
             var parts = topic.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-            // enterprise/site/area/line/equipment/signal
+            // [prefix-]enterprise/site/area/line/equipment/signal
+            // Matches "enterprise", "virtual-enterprise", "acme-enterprise", etc.
             if (parts.Length >= 6 &&
-                parts[0].Equals("enterprise", StringComparison.OrdinalIgnoreCase))
+                parts[0].EndsWith("enterprise", StringComparison.OrdinalIgnoreCase))
             {
                 return (parts[1], parts[2], parts[3], parts[4]);
             }

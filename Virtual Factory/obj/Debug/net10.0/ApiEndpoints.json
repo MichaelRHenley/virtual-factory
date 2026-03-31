@@ -83,6 +83,22 @@
   },
   {
     "ContainingType": "Virtual_Factory.Endpoints.AssetEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapAssetEndpoints\u003Eb__0_5",
+    "RelativePath": "api/assets/hierarchy",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.AssetEndpoints\u002B\u003C\u003Ec",
     "Method": "\u003CMapAssetEndpoints\u003Eb__0_4",
     "RelativePath": "api/browse",
     "HttpMethod": "GET",
@@ -92,6 +108,126 @@
       {
         "Name": "path",
         "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.EquipmentEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapEquipmentEndpoints\u003Eb__0_7",
+    "RelativePath": "api/equipment/{equipmentId}/context",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "equipmentId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.EquipmentEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapEquipmentEndpoints\u003Eb__0_1",
+    "RelativePath": "api/equipment/{equipmentId}/event-timeline",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "equipmentId",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "hours",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.EquipmentEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapEquipmentEndpoints\u003Eb__0_4",
+    "RelativePath": "api/equipment/{equipmentId}/last-alarm",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "equipmentId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.EquipmentEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapEquipmentEndpoints\u003Eb__0_5",
+    "RelativePath": "api/equipment/{equipmentId}/last-stopped",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "equipmentId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.EquipmentEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapEquipmentEndpoints\u003Eb__0_6",
+    "RelativePath": "api/equipment/{equipmentId}/state-availability",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "equipmentId",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "hours",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
         "IsRequired": false
       }
     ],
@@ -115,6 +251,28 @@
         "Name": "equipment",
         "Type": "System.String",
         "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.EquipmentEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapEquipmentEndpoints\u003Eb__0_2",
+    "RelativePath": "api/equipment/availability",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "hours",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": [
@@ -164,6 +322,28 @@
     ]
   },
   {
+    "ContainingType": "Virtual_Factory.Endpoints.EquipmentEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapEquipmentEndpoints\u003Eb__0_3",
+    "RelativePath": "api/equipment/state-availability",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "hours",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
     "ContainingType": "Virtual_Factory.Endpoints.TelemetryEndpoints\u002B\u003C\u003Ec",
     "Method": "\u003CMapTelemetryEndpoints\u003Eb__0_5",
     "RelativePath": "api/equipment/summary-metrics",
@@ -178,6 +358,84 @@
         "StatusCode": 200
       }
     ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.MockOperationalEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapMockOperationalEndpoints\u003Eb__0_2",
+    "RelativePath": "api/mock/materials",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "equipmentName",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ],
+    "Tags": [
+      "Mock"
+    ],
+    "EndpointName": "MockMaterials"
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.MockOperationalEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapMockOperationalEndpoints\u003Eb__0_1",
+    "RelativePath": "api/mock/schedules",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "equipmentName",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ],
+    "Tags": [
+      "Mock"
+    ],
+    "EndpointName": "MockSchedules"
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.MockOperationalEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapMockOperationalEndpoints\u003Eb__0_0",
+    "RelativePath": "api/mock/work-orders",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "equipmentName",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ],
+    "Tags": [
+      "Mock"
+    ],
+    "EndpointName": "MockWorkOrders"
   },
   {
     "ContainingType": "Virtual_Factory.Endpoints.TelemetryEndpoints\u002B\u003C\u003Ec",

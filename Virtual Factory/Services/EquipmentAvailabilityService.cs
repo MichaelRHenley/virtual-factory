@@ -203,6 +203,12 @@ namespace Virtual_Factory.Services
                     break;
             }
 
+            // If no event precedes the window (e.g. baseline written after window start),
+            // seed from the earliest known state so the full window is attributed to that
+            // state rather than accumulating unknown time before the first observation.
+            if (entryState == null && allRunEvents.Count > 0)
+                entryState = allRunEvents[0].NewState;
+
             var windowEvents = allRunEvents
                 .Where(x => x.TimestampUtc >= windowStart && x.TimestampUtc < windowEnd)
                 .ToList();

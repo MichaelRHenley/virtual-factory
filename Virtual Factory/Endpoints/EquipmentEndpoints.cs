@@ -44,6 +44,28 @@ namespace Virtual_Factory.Endpoints
                 return Results.Ok(result);
             });
 
+            app.MapGet("/api/equipment/{equipmentId}/last-alarm", async (
+    string equipmentId,
+    IEquipmentEventSummaryService service,
+    CancellationToken cancellationToken) =>
+            {
+                var ts = await service.GetLastAlarmAsync(equipmentId, cancellationToken);
+                return ts.HasValue
+                    ? Results.Ok(new { timestampUtc = ts.Value })
+                    : Results.NotFound();
+            });
+
+            app.MapGet("/api/equipment/{equipmentId}/last-stopped", async (
+    string equipmentId,
+    IEquipmentEventSummaryService service,
+    CancellationToken cancellationToken) =>
+            {
+                var ts = await service.GetLastStoppedAsync(equipmentId, cancellationToken);
+                return ts.HasValue
+                    ? Results.Ok(new { timestampUtc = ts.Value })
+                    : Results.NotFound();
+            });
+
             app.MapGet("/api/equipment/{equipmentId}/state-availability", async (
     string equipmentId,
     int? hours,
@@ -51,6 +73,15 @@ namespace Virtual_Factory.Endpoints
             {
                 var result = await service.GetStateAvailabilityAsync(equipmentId, hours ?? 24);
                 return result is null ? Results.NotFound() : Results.Ok(result);
+            });
+
+            app.MapGet("/api/equipment/{equipmentId}/context", async (
+    string equipmentId,
+    IOperationalContextService service,
+    CancellationToken cancellationToken) =>
+            {
+                var context = await service.GetContextAsync(equipmentId, cancellationToken);
+                return context is null ? Results.NotFound() : Results.Ok(context);
             });
 
             return app;

@@ -10,5 +10,13 @@ namespace Virtual_Factory.Services
             string equipmentId,
             int hours = 24,
             CancellationToken cancellationToken = default);
+
+        Task<DateTime?> GetLastStoppedAsync(
+            string equipmentId,
+            CancellationToken cancellationToken = default);
+
+        Task<DateTime?> GetLastAlarmAsync(
+            string equipmentId,
+            CancellationToken cancellationToken = default);
     }
 }

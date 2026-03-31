@@ -1002,7 +1002,7 @@
         function getSeverityRank(summary) {
             if (summary.isOffline) return 0;
 
-            if (summary.longestCurrentAlarm)
+            if (summary.hasAlarm && summary.longestCurrentAlarm)
                 return 1;
 
             if (summary.latestEvent?.state === "Active")
@@ -1063,18 +1063,13 @@
             }
 
             if (summary.hasAlarm) {
-                html += `<span class="badge badge-red" style="margin-left:8px;">alarm</span>`;
-            }
-
-            if (summary.longestCurrentAlarm) {
-                html += `<span class="badge badge-red" style="margin-left:8px;">
-        alarm active ${formatDuration(summary.longestCurrentAlarm.durationSeconds)}
-    </span>`;
-            }
-            else if (summary.alarmCount24h > 0) {
-                html += `<span class="badge badge-orange" style="margin-left:8px;">
-        ${summary.alarmCount24h} alarms (24h)
-    </span>`;
+                if (summary.longestCurrentAlarm) {
+                    html += `<span class="badge badge-red" style="margin-left:8px;">alarm active ${formatDuration(summary.longestCurrentAlarm.durationSeconds)}</span>`;
+                } else {
+                    html += `<span class="badge badge-red" style="margin-left:8px;">alarm</span>`;
+                }
+            } else if (summary.alarmCount24h > 0) {
+                html += `<span class="badge badge-orange" style="margin-left:8px;">${summary.alarmCount24h} alarms (24h)</span>`;
             }
 
             if (summary.isHot) {
@@ -1213,16 +1208,18 @@
             const alarmCount24hText =
                 `${summary.alarmCount24h} alarms in last 24h`;
 
-            const latestEventText =
-                !summary.latestEvent
-                    ? "Latest event: none"
-                    : `Latest event: ${summary.latestEvent.eventType}${summary.latestEvent.eventName
-                        ? " - " + summary.latestEvent.eventName
-                        : ""
-                    } (${summary.latestEvent.state})`;
+            let latestEventText = (() => {
+                if (!summary.latestEvent) return "Latest event: none";
+                const e = summary.latestEvent;
+                const label =
+                    e.eventType === "Alarm" && (e.state ?? "").toLowerCase() === "normal"
+                        ? "Alarm cleared"
+                        : e.eventType;
+                return `Latest event: ${label}${e.eventName ? " - " + e.eventName : ""} (${e.state})`;
+            })();
 
             const longestAlarmText =
-                !summary.longestCurrentAlarm
+                !(summary.hasAlarm && summary.longestCurrentAlarm)
                     ? "Longest current alarm: none"
                     : `Longest current alarm: ${summary.longestCurrentAlarm.eventName
                     } (${formatDuration(summary.longestCurrentAlarm.durationSeconds)})`;
@@ -1252,20 +1249,20 @@
                 .join("");
 
             const trendSignals = getTrendSignals(rows);
-            let alarmStatus = null;
-            let offlineStatus = null;
+            let lastAlarmTimestamp = null;
+            let lastStoppedTimestamp = null;
             let timeline = [];
 
             try {
-                alarmStatus = await loadAlarmStatus(selectedEquipment);
+                lastAlarmTimestamp = await loadLastAlarm(selectedEquipment);
             } catch (err) {
-                console.error("loadAlarmStatus failed", err);
+                console.error("loadLastAlarm failed", err);
             }
 
             try {
-                offlineStatus = await loadOfflineStatus(selectedEquipment);
+                lastStoppedTimestamp = await loadLastStopped(selectedEquipment);
             } catch (err) {
-                console.error("loadOfflineStatus failed", err);
+                console.error("loadLastStopped failed", err);
             }
 
             try {
@@ -1274,20 +1271,34 @@
                 console.error("loadEventTimeline failed", err);
             }
 
+            // All timeline entries have null previousState → only baseline rows exist,
+            // no real state transitions have been recorded yet.
+            const isBaselineOnly = timeline.length > 0 && timeline.every(x => x.previousState == null);
+            if (isBaselineOnly && summary.latestEvent) latestEventText = "Latest event: baseline captured";
+
+            let operationalContext = null;
+            try {
+                operationalContext = await loadOperationalContext(selectedEquipment);
+            } catch (err) {
+                console.error("loadOperationalContext failed", err);
+            }
+
             const availability = await loadAvailability(selectedEquipment, 1);
 
             const availabilityHtml =
                 !availability
                     ? `<div class="detail-meta">Availability: no data</div>`
                     : `
-<div class="detail-meta">Running: ${availability.runningPercent.toFixed(1)}%</div>
-<div class="detail-meta">Stopped: ${availability.stoppedPercent.toFixed(1)}%</div>
-<div class="detail-meta">Unknown: ${availability.unknownPercent.toFixed(1)}%</div>
+<div class="detail-meta">Running (1h): ${availability.runningPercent.toFixed(1)}%</div>
+<div class="detail-meta">Stopped (1h): ${availability.stoppedPercent.toFixed(1)}%</div>
+<div class="detail-meta">Unknown (1h): ${availability.unknownPercent.toFixed(1)}%</div>
 `;
 
             const timelineHtml = timeline.length === 0
                 ? `<div class="muted">No recent events</div>`
-                : timeline
+                : isBaselineOnly
+                    ? `<div class="muted">Waiting for first transition</div>`
+                    : timeline
                     .slice(0, 10)
                     .map(x => `
     <div class="detail-label">
@@ -1298,6 +1309,88 @@
     </div>
 `)
                     .join("");
+
+            const operationalContextHtml = (() => {
+                const ctx = operationalContext;
+                if (!ctx) return "";
+
+                const woHtml = (() => {
+                    const wo = ctx.activeWorkOrder;
+                    if (!wo) return `<div class="detail-label" style="grid-column:1/-1"><span class="muted">No active work order</span></div>`;
+                    const priorityClass = wo.priority === "high" || wo.priority === "critical"
+                        ? "badge-red" : wo.priority === "medium" ? "badge-orange" : "badge-gray";
+                    const statusClass  = wo.status === "in-progress" ? "badge-blue" : "badge-gray";
+                    const start = wo.scheduledStartUtc ? new Date(wo.scheduledStartUtc).toLocaleString() : "—";
+                    const end   = wo.scheduledEndUtc   ? new Date(wo.scheduledEndUtc).toLocaleString()   : "—";
+                    return `
+                        <div class="detail-label">Work order</div>
+                        <div class="detail-value">${wo.workOrderNumber}</div>
+                        <div class="detail-label">Title</div>
+                        <div class="detail-value">${wo.title}</div>
+                        <div class="detail-label">Status</div>
+                        <div class="detail-value"><span class="badge ${statusClass}">${wo.status}</span></div>
+                        <div class="detail-label">Priority</div>
+                        <div class="detail-value"><span class="badge ${priorityClass}">${wo.priority}</span></div>
+                        <div class="detail-label">Scheduled</div>
+                        <div class="detail-value" style="font-size:0.8rem">${start} – ${end}</div>`;
+                })();
+
+                const schedHtml = (() => {
+                    const s = ctx.scheduledProduct;
+                    if (!s) return `<div class="detail-label" style="grid-column:1/-1"><span class="muted">No scheduled product</span></div>`;
+                    const now = Date.now();
+                    const isActive = new Date(s.startUtc) <= now && now <= new Date(s.endUtc);
+                    const statusClass = isActive ? "badge-green" : "badge-gray";
+                    const statusLabel = isActive ? "active" : "upcoming";
+                    const start = new Date(s.startUtc).toLocaleString();
+                    const end   = new Date(s.endUtc).toLocaleString();
+                    return `
+                        <div class="detail-label">Schedule</div>
+                        <div class="detail-value">${s.title}</div>
+                        <div class="detail-label">Type</div>
+                        <div class="detail-value">${s.scheduleType}</div>
+                        <div class="detail-label">Window</div>
+                        <div class="detail-value" style="font-size:0.8rem">${start} – ${end}</div>
+                        <div class="detail-label">Status</div>
+                        <div class="detail-value"><span class="badge ${statusClass}">${statusLabel}</span></div>`;
+                })();
+
+                const matHtml = (() => {
+                    const m = ctx.materialStatus;
+                    if (!m) return `<div class="detail-label" style="grid-column:1/-1"><span class="muted">No material data</span></div>`;
+                    const dotClass = m.stockStatus === "available" ? "heartbeat-green"
+                                   : m.stockStatus === "low"       ? "heartbeat-amber"
+                                   :                                  "heartbeat-red";
+                    return `
+                        <div class="detail-label">Material</div>
+                        <div class="detail-value">${m.materialCode}</div>
+                        <div class="detail-label">Description</div>
+                        <div class="detail-value">${m.description}</div>
+                        <div class="detail-label">Unit</div>
+                        <div class="detail-value">${m.unit}</div>
+                        <div class="detail-label">Stock status</div>
+                        <div class="detail-value" style="display:flex;align-items:center;gap:6px;justify-content:flex-end">
+                            <span class="heartbeat-dot ${dotClass}"></span>${m.stockStatus}
+                        </div>`;
+                })();
+
+                return `
+<div class="trend-section">
+    <div class="trend-title">Operational Context</div>
+    <div style="margin-bottom:10px">
+        <div class="muted" style="font-size:0.8rem;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Work Order</div>
+        <div class="detail-grid">${woHtml}</div>
+    </div>
+    <div style="margin-bottom:10px">
+        <div class="muted" style="font-size:0.8rem;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Schedule</div>
+        <div class="detail-grid">${schedHtml}</div>
+    </div>
+    <div>
+        <div class="muted" style="font-size:0.8rem;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Materials</div>
+        <div class="detail-grid">${matHtml}</div>
+    </div>
+</div>`;
+            })();
 
             panel.innerHTML = `
                     <div class="detail-title">${selectedEquipment.toUpperCase()}</div>
@@ -1311,25 +1404,21 @@
                     <div class="detail-meta">${longestAlarmText}</div>
                     ${availabilityHtml}
             ${
-                !alarmStatus || !alarmStatus.hasAlarmData
-                    ? "Alarm: no history"
-                    : alarmStatus.isAlarmActive
-                        ? `Alarm active: ${formatDuration(alarmStatus.alarmActiveSeconds)}`
-                        : alarmStatus.lastAlarmSecondsAgo != null
-                            ? `Last alarm: ${formatDuration(alarmStatus.lastAlarmSecondsAgo)} ago`
-                            : "Last alarm: none"
+                summary.hasAlarm
+                    ? (summary.longestCurrentAlarm
+                        ? `Alarm active: ${formatDuration(summary.longestCurrentAlarm.durationSeconds)}`
+                        : "Alarm active")
+                    : lastAlarmTimestamp != null
+                        ? `Last alarm: ${formatDuration(Math.floor((Date.now() - new Date(lastAlarmTimestamp).getTime()) / 1000))} ago`
+                        : "Last alarm: none"
     }
                     </div>
 
                     <div class="detail-meta">
 ${
-                !offlineStatus || !offlineStatus.hasRunData
-                    ? "Offline: no history"
-                    : offlineStatus.isOffline
-                        ? `Offline: ${formatDuration(offlineStatus.offlineSeconds)}`
-                        : offlineStatus.lastOfflineSecondsAgo != null
-                            ? `Last stopped: ${formatDuration(offlineStatus.lastOfflineSecondsAgo)} ago`
-                            : "Last stopped: none"
+                lastStoppedTimestamp == null
+                    ? "Last stopped: none"
+                    : `Last stopped: ${formatDuration(Math.floor((Date.now() - new Date(lastStoppedTimestamp).getTime()) / 1000))} ago`
 }
 </div>
 
@@ -1344,6 +1433,8 @@ ${
         ${timelineHtml}
     </div>
 </div>
+
+                    ${operationalContextHtml}
 
                     <div class="trend-section">
                         <div class="trend-title">Mini Trends</div>
@@ -1592,7 +1683,7 @@ ${
 
         async function loadAvailabilityAll(hours = 1) {
             const response = await fetch(
-                `/api/equipment/availability?hours=${hours}`
+                `/api/equipment/state-availability?hours=${hours}`
             );
 
             if (!response.ok) return [];
@@ -1608,6 +1699,38 @@ ${
             if (!response.ok) {
                 return null;
             }
+
+            return await response.json();
+        }
+
+        async function loadLastAlarm(equipment) {
+            const response = await fetch(
+                `/api/equipment/${encodeURIComponent(equipment)}/last-alarm`
+            );
+
+            if (!response.ok) return null;
+
+            const data = await response.json();
+            return data.timestampUtc ?? null;
+        }
+
+        async function loadLastStopped(equipment) {
+            const response = await fetch(
+                `/api/equipment/${encodeURIComponent(equipment)}/last-stopped`
+            );
+
+            if (!response.ok) return null;
+
+            const data = await response.json();
+            return data.timestampUtc ?? null;
+        }
+
+        async function loadOperationalContext(equipment) {
+            const response = await fetch(
+                `/api/equipment/${encodeURIComponent(equipment)}/context`
+            );
+
+            if (!response.ok) return null;
 
             return await response.json();
         }

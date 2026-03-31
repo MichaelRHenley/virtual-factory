@@ -5,6 +5,72 @@
     "version": "1.0"
   },
   "paths": {
+    "/api/mock/work-orders": {
+      "get": {
+        "tags": [
+          "Mock"
+        ],
+        "operationId": "MockWorkOrders",
+        "parameters": [
+          {
+            "name": "equipmentName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/mock/schedules": {
+      "get": {
+        "tags": [
+          "Mock"
+        ],
+        "operationId": "MockSchedules",
+        "parameters": [
+          {
+            "name": "equipmentName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/mock/materials": {
+      "get": {
+        "tags": [
+          "Mock"
+        ],
+        "operationId": "MockMaterials",
+        "parameters": [
+          {
+            "name": "equipmentName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/assets": {
       "get": {
         "tags": [
@@ -96,6 +162,18 @@
               "type": "string"
             }
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assets/hierarchy": {
+      "get": {
+        "tags": [
+          "Virtual Factory"
         ],
         "responses": {
           "200": {
@@ -266,6 +344,176 @@
           }
         }
       }
+    },
+    "/api/equipment/{equipmentId}/event-timeline": {
+      "get": {
+        "tags": [
+          "Virtual Factory"
+        ],
+        "parameters": [
+          {
+            "name": "equipmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hours",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/equipment/availability": {
+      "get": {
+        "tags": [
+          "Virtual Factory"
+        ],
+        "parameters": [
+          {
+            "name": "hours",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/equipment/state-availability": {
+      "get": {
+        "tags": [
+          "Virtual Factory"
+        ],
+        "parameters": [
+          {
+            "name": "hours",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/equipment/{equipmentId}/last-alarm": {
+      "get": {
+        "tags": [
+          "Virtual Factory"
+        ],
+        "parameters": [
+          {
+            "name": "equipmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/equipment/{equipmentId}/last-stopped": {
+      "get": {
+        "tags": [
+          "Virtual Factory"
+        ],
+        "parameters": [
+          {
+            "name": "equipmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/equipment/{equipmentId}/state-availability": {
+      "get": {
+        "tags": [
+          "Virtual Factory"
+        ],
+        "parameters": [
+          {
+            "name": "equipmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hours",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/equipment/{equipmentId}/context": {
+      "get": {
+        "tags": [
+          "Virtual Factory"
+        ],
+        "parameters": [
+          {
+            "name": "equipmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -291,6 +539,9 @@
     }
   },
   "tags": [
+    {
+      "name": "Mock"
+    },
     {
       "name": "Virtual Factory"
     }

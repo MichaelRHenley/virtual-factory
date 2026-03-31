@@ -174,5 +174,33 @@ namespace Virtual_Factory.Services
             return results;
         }
 
+        public async Task<DateTime?> GetLastStoppedAsync(
+            string equipmentId,
+            CancellationToken cancellationToken = default)
+        {
+            return await _db.EquipmentStateEvents
+                .AsNoTracking()
+                .Where(x => x.EquipmentName == equipmentId
+                         && x.EventType == "run-state-changed"
+                         && x.NewState == "stopped")
+                .OrderByDescending(x => x.TimestampUtc)
+                .Select(x => (DateTime?)x.TimestampUtc)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task<DateTime?> GetLastAlarmAsync(
+            string equipmentId,
+            CancellationToken cancellationToken = default)
+        {
+            return await _db.EquipmentStateEvents
+                .AsNoTracking()
+                .Where(x => x.EquipmentName == equipmentId
+                         && x.EventType == "alarm-state-changed"
+                         && x.NewState == "alarm")
+                .OrderByDescending(x => x.TimestampUtc)
+                .Select(x => (DateTime?)x.TimestampUtc)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
     }
 }

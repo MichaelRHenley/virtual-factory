@@ -16,6 +16,14 @@ builder.Services.AddHostedService<EquipmentStateEventService>();
 builder.Services.AddHostedService<TelemetryHistorySnapshotService>();
 builder.Services.AddScoped<IEquipmentAvailabilityService, EquipmentAvailabilityService>();
 builder.Services.AddScoped<IEquipmentEventSummaryService, EquipmentEventSummaryService>();
+var mockApiBaseUrl = builder.Configuration["MockApi:BaseUrl"] ?? "http://localhost:5177";
+void ConfigureMockClient(HttpClient c) =>
+    c.BaseAddress = new Uri(mockApiBaseUrl.TrimEnd('/') + "/");
+
+builder.Services.AddHttpClient<IWorkOrderAdapter, WorkOrderAdapter>(ConfigureMockClient);
+builder.Services.AddHttpClient<IScheduleAdapter, ScheduleAdapter>(ConfigureMockClient);
+builder.Services.AddHttpClient<IMaterialAdapter, MaterialAdapter>(ConfigureMockClient);
+builder.Services.AddScoped<IOperationalContextService, OperationalContextService>();
 builder.Services.AddSingleton<IAssetHierarchyService, AssetHierarchyService>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -39,6 +47,7 @@ app.MapControllers();
 app.MapAssetEndpoints();
 app.MapTelemetryEndpoints();
 app.MapEquipmentEndpoints();
+app.MapMockOperationalEndpoints();
 
 await app.Services.GetRequiredService<ISeedLoader>().LoadAsync();
 

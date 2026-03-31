@@ -30,6 +30,32 @@ namespace Virtual_Factory.Services
                     TimestampUtc = current.TimestampUtc,
                     Source = current.Source
                 });
+
+                // Record initial run and alarm states so availability calculations and recent
+                // event panels populate immediately after a reset, without waiting for the
+                // first transition to occur.
+                if (!string.Equals(current.RunState, "unknown", StringComparison.OrdinalIgnoreCase))
+                {
+                    events.Add(new EquipmentStateEvent
+                    {
+                        EquipmentName = current.EquipmentName,
+                        EventType = "run-state-changed",
+                        PreviousState = null,
+                        NewState = current.RunState,
+                        TimestampUtc = current.TimestampUtc,
+                        Source = current.Source
+                    });
+                }
+
+                events.Add(new EquipmentStateEvent
+                {
+                    EquipmentName = current.EquipmentName,
+                    EventType = "alarm-state-changed",
+                    PreviousState = null,
+                    NewState = current.AlarmState,
+                    TimestampUtc = current.TimestampUtc,
+                    Source = current.Source
+                });
             }
             else
             {

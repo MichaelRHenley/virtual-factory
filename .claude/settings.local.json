@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build:*)",
+      "Bash(xargs grep:*)",
+      "Bash(grep -r \"OnConfiguring\\\\|Connection\\\\|Npgsql\\\\|UseSqlite\\\\|UseSqlServer\" 'C:\\\\Dev\\\\Virtual Factory' --include=*.cs)",
+      "Bash(head -5 \"/c/Dev/Virtual Factory/Virtual Factory/Extensions\"/*.cs)"
+    ]
+  }
+}
