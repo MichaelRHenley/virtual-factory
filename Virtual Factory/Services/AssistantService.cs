@@ -27,20 +27,39 @@ namespace Virtual_Factory.Services
             string equipmentId,
             CancellationToken cancellationToken = default)
         {
+            var overallStart = DateTime.UtcNow;
             _log.LogInformation(
-                "AssistantService.GetEquipmentAssistantResponseAsync: calling BuildAsync for {EquipmentId}",
-                equipmentId);
+                "AssistantService.GetEquipmentAssistantResponseAsync ENTER for {EquipmentId} at {StartTime}",
+                equipmentId,
+                overallStart);
+
+            var ctxStart = DateTime.UtcNow;
+            _log.LogInformation(
+                "AssistantService context build START for {EquipmentId} at {StartTime}",
+                equipmentId,
+                ctxStart);
 
             var context = await _contextBuilder.BuildAsync(equipmentId, cancellationToken);
 
+            var ctxEnd = DateTime.UtcNow;
+            var ctxMs = (ctxEnd - ctxStart).TotalMilliseconds;
+
             _log.LogInformation(
-                "AssistantService: BuildAsync returned {ContextStatus} for {EquipmentId}, summaryLength={Length}",
-                context is null ? "null" : "non-null",
+                "AssistantService context build END for {EquipmentId} after {DurationMs} ms (status={ContextStatus}, summaryLength={Length})",
                 equipmentId,
+                ctxMs,
+                context is null ? "null" : "non-null",
                 context?.HumanSummary.Length ?? -1);
 
             if (context is null)
             {
+                var overallEndNoCtx = DateTime.UtcNow;
+                var overallMsNoCtx = (overallEndNoCtx - overallStart).TotalMilliseconds;
+                _log.LogInformation(
+                    "AssistantService EXIT for {EquipmentId} after {DurationMs} ms (no context)",
+                    equipmentId,
+                    overallMsNoCtx);
+
                 return new AssistantResponseDto
                 {
                     EquipmentId       = equipmentId,
@@ -112,7 +131,11 @@ namespace Virtual_Factory.Services
 
             var requestBody = new OllamaGenerateRequest(_model, prompt, Stream: false);
 
-            _log.LogInformation("Calling Ollama with structured context for {EquipmentId}", equipmentId);
+            var llmStart = DateTime.UtcNow;
+            _log.LogInformation(
+                "AssistantService LLM call START for {EquipmentId} at {StartTime}",
+                equipmentId,
+                llmStart);
 
             HttpResponseMessage httpResponse;
             try
@@ -121,6 +144,13 @@ namespace Virtual_Factory.Services
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
+                var llmFailEnd = DateTime.UtcNow;
+                var llmFailMs = (llmFailEnd - llmStart).TotalMilliseconds;
+                _log.LogWarning(ex,
+                    "AssistantService LLM call FAILED for {EquipmentId} after {DurationMs} ms — returning context summary as response",
+                    equipmentId,
+                    llmFailMs);
+
                 _log.LogWarning(ex, "Ollama unreachable for {EquipmentId} — returning context summary as response", equipmentId);
                 return new AssistantResponseDto
                 {
@@ -133,7 +163,16 @@ namespace Virtual_Factory.Services
 
             if (!httpResponse.IsSuccessStatusCode)
             {
+                var llmEndError = DateTime.UtcNow;
+                var llmErrorMs = (llmEndError - llmStart).TotalMilliseconds;
+
                 var detail = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
+                _log.LogWarning(
+                    "AssistantService LLM call END (non-success) for {EquipmentId} after {DurationMs} ms with status {StatusCode}",
+                    equipmentId,
+                    llmErrorMs,
+                    (int)httpResponse.StatusCode);
+
                 return new AssistantResponseDto
                 {
                     EquipmentId       = equipmentId,
@@ -149,6 +188,21 @@ namespace Virtual_Factory.Services
 
             var ollamaResponse = await httpResponse.Content
                 .ReadFromJsonAsync<OllamaGenerateResponse>(cancellationToken);
+
+            var llmEnd = DateTime.UtcNow;
+            var llmMs = (llmEnd - llmStart).TotalMilliseconds;
+            _log.LogInformation(
+                "AssistantService LLM call END for {EquipmentId} after {DurationMs} ms with status {StatusCode}",
+                equipmentId,
+                llmMs,
+                (int)httpResponse.StatusCode);
+
+            var overallEnd = DateTime.UtcNow;
+            var overallMs = (overallEnd - overallStart).TotalMilliseconds;
+            _log.LogInformation(
+                "AssistantService.GetEquipmentAssistantResponseAsync EXIT for {EquipmentId} after {DurationMs} ms",
+                equipmentId,
+                overallMs);
 
             return new AssistantResponseDto
             {

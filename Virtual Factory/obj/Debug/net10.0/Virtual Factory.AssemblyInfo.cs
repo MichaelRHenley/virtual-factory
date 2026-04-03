@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Virtual Factory")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ef49a6b0daf7a2def833a8d5803be915b7fbd198")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7d97e21a6dd3aabb4f54719e183b7f4b228409e4")]
 [assembly: System.Reflection.AssemblyProductAttribute("Virtual Factory")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Virtual Factory")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

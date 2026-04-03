@@ -180,9 +180,13 @@
         askButton.textContent = "Thinking...";
         assistantResponseEl.textContent = "Thinking...";
         try {
-            const data = await window.AssistantClient.fetchAssistantEquipment(currentEquipment);
-            const raw = data.answer ?? data.assistantResponse ?? "No response.";
-            assistantResponseEl.textContent = formatSupervisorAssistantAnswer(raw);
+            const ctx = await window.AssistantClient.fetchAssistantContext(currentEquipment);
+            if (!ctx) {
+                assistantResponseEl.textContent = "No assistant context available.";
+            } else {
+                const raw = ctx.contextSummary || ctx.ContextSummary || ctx.inputSummary || ctx.InputSummary || "";
+                assistantResponseEl.textContent = formatSupervisorAssistantAnswer(raw);
+            }
         } catch (err) {
             console.error("askAssistant failed", err);
             assistantResponseEl.textContent = "Assistant request failed.";

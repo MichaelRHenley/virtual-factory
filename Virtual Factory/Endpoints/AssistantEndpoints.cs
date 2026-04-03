@@ -36,10 +36,23 @@ namespace Virtual_Factory.Endpoints
             app.MapPost("/api/assistant/equipment/{equipmentId}", async (
                 string equipmentId,
                 IAssistantService service,
+                ILoggerFactory loggerFactory,
                 CancellationToken cancellationToken) =>
             {
+                var log = loggerFactory.CreateLogger("AssistantEndpoints.Equipment");
+                var overallStart = DateTime.UtcNow;
+
+                log.LogInformation("Assistant equipment endpoint ENTER for {EquipmentId} at {StartTime}",
+                    equipmentId, overallStart);
+
                 var result = await service.GetEquipmentAssistantResponseAsync(
                     equipmentId, cancellationToken);
+
+                var overallEnd = DateTime.UtcNow;
+                var totalMs = (overallEnd - overallStart).TotalMilliseconds;
+
+                log.LogInformation("Assistant equipment endpoint EXIT for {EquipmentId} after {DurationMs} ms",
+                    equipmentId, totalMs);
 
                 return result is null ? Results.NotFound() : Results.Ok(result);
             });
