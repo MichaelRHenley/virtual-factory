@@ -21,8 +21,17 @@
         button { padding: 8px 14px; border-radius: 6px; border:none; background:#2563eb; color:#fff; cursor:pointer; font-size:0.9rem; }
         button:disabled { opacity:0.6; cursor:default; }
         #assistantResponse { white-space:pre-wrap; font-size:0.9rem; line-height:1.4; margin-top:8px; }
+        .last-updated { font-size:0.75rem; color:#9ca3af; margin-top:6px; margin-bottom:2px; }
+        .assistant-badges { margin-top:8px; margin-bottom:4px; min-height: 18px; }
+        .badge.warning { display:inline-block; padding:3px 8px; border-radius:999px; font-size:0.75rem; font-weight:600; background:#f97316; color:#111827; margin-right:4px; margin-bottom:2px; cursor:pointer; border:none; }
+        .badge.warning.active { outline:2px solid #fff; outline-offset:2px; }
+        .badge-detail { display:none; padding:6px 10px; margin:4px 0 2px; background:#1f2937; border-radius:6px; font-size:0.8rem; color:#d1d5db; line-height:1.4; white-space:pre-wrap; }
+        .badge-detail.open { display:block; }
         .field-label { font-size:0.8rem; text-transform:uppercase; letter-spacing:.05em; color:#666; margin-top:8px; }
         .field-value { font-size:1rem; font-weight:600; margin-top:2px; }
+        .badge.fleet { display:inline-block; padding:2px 6px; border-radius:999px; font-size:0.7rem; font-weight:600; background:#f97316; color:#111827; margin-right:3px; white-space:nowrap; }
+        tr[data-eq] { cursor:pointer; }
+        tr[data-eq]:hover { background:#f9fafb; }
     </style>
 </head>
 <body>
@@ -57,13 +66,13 @@
 
     <div class="layout">
         <div class="card">
-            <h3>Worst Availability (1h)</h3>
+            <h3>Fleet Exceptions</h3>
             <table>
                 <thead>
-                    <tr><th>Equipment</th><th>Running %</th></tr>
+                    <tr><th>Equipment</th><th>Running %</th><th>Issues</th></tr>
                 </thead>
                 <tbody id="worstTableBody">
-                    <tr><td colspan="2">Loading...</td></tr>
+                    <tr><td colspan="3">Loading...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -88,8 +97,11 @@
 
             <div class="field-label">Assistant</div>
             <button id="askButton" type="button">Ask Assistant</button>
+            <div id="lastUpdatedTs" class="last-updated">—</div>
+            <div id="assistantBadges" class="assistant-badges"></div>
+            <div id="badgeDetail" class="badge-detail"></div>
             <div id="assistantResponse"
-                 style="margin-top:8px; max-height:150px; overflow-y:auto;
+                 style="margin-top:6px; max-height:150px; overflow-y:auto;
                         font-size:0.85rem; line-height:1.4;"></div>
         </div>
     </div>

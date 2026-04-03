@@ -178,10 +178,10 @@ C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\Virtual Factory.pdb
 C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\Virtual Factory.genruntimeconfig.cache
 C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\ref\Virtual Factory.dll
 C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt
-C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\compressed\hoivt9ir0c-{0}-vm2rj6ped4-vm2rj6ped4.gz
-C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\compressed\j8rv1rdzlh-{0}-68moev42et-68moev42et.gz
-C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\compressed\wx4cv6vu0b-{0}-3v92x5udvz-3v92x5udvz.gz
-C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\compressed\bo154mnh4h-{0}-z6nxrk3j6w-z6nxrk3j6w.gz
 C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\compressed\aqonsxyikt-{0}-vdvnro8t0k-vdvnro8t0k.gz
-C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\compressed\cxhxz2g2o1-{0}-kkr8uv0wnz-kkr8uv0wnz.gz
-C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\compressed\1l2rlt6iuy-{0}-79f6kcxo9i-79f6kcxo9i.gz
+C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\compressed\cxhxz2g2o1-{0}-d6gah3sn3f-d6gah3sn3f.gz
+C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\compressed\wx4cv6vu0b-{0}-5p55zs41zt-5p55zs41zt.gz
+C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\compressed\bo154mnh4h-{0}-874pkjs8tl-874pkjs8tl.gz
+C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\compressed\1l2rlt6iuy-{0}-9da2p8iyww-9da2p8iyww.gz
+C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\compressed\j8rv1rdzlh-{0}-kjbflkadil-kjbflkadil.gz
+C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\compressed\hoivt9ir0c-{0}-m11r4scfrw-m11r4scfrw.gz

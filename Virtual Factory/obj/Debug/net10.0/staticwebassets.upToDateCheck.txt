@@ -1,16 +1,16 @@
 wwwroot\index.html
 wwwroot\js\assistant-client.js
-wwwroot\js\maintenance.js
+wwwroot\js\operator.js
+wwwroot\js\supervisor.js
 wwwroot\maintenance.html
 wwwroot\operator.html
 wwwroot\supervisor.html
-wwwroot\js\operator.js
-wwwroot\js\supervisor.js
+wwwroot\js\maintenance.js
 C:\Dev\Virtual Factory\Virtual Factory\wwwroot\index.html
 C:\Dev\Virtual Factory\Virtual Factory\wwwroot\js\assistant-client.js
-C:\Dev\Virtual Factory\Virtual Factory\wwwroot\js\maintenance.js
+C:\Dev\Virtual Factory\Virtual Factory\wwwroot\js\operator.js
+C:\Dev\Virtual Factory\Virtual Factory\wwwroot\js\supervisor.js
 C:\Dev\Virtual Factory\Virtual Factory\wwwroot\maintenance.html
 C:\Dev\Virtual Factory\Virtual Factory\wwwroot\operator.html
 C:\Dev\Virtual Factory\Virtual Factory\wwwroot\supervisor.html
-C:\Dev\Virtual Factory\Virtual Factory\wwwroot\js\operator.js
-C:\Dev\Virtual Factory\Virtual Factory\wwwroot\js\supervisor.js
+C:\Dev\Virtual Factory\Virtual Factory\wwwroot\js\maintenance.js

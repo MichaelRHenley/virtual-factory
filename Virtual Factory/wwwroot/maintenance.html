@@ -18,6 +18,16 @@
         .field-value.small { font-weight: 400; font-size: 0.85rem; color: #555; }
         select { width: 100%; padding: 6px 8px; border-radius: 4px; border: 1px solid #ccc; }
         #assistantResponse { white-space: pre-wrap; font-size:0.9rem; line-height:1.4; }
+        .last-updated { font-size:0.75rem; color:#9ca3af; margin-top:6px; margin-bottom:2px; }
+        .badge.fleet { display:inline-block; padding:2px 6px; border-radius:999px; font-size:0.75rem; font-weight:600; background:#f97316; color:#111827; margin-right:4px; white-space:nowrap; cursor:pointer; }
+        .badge.fleet:hover { background:#ea580c; }
+        .filter-label { font-size:0.8rem; color:#6b7280; }
+        .btn-link { background:none; border:none; color:#2563eb; font-size:0.8rem; cursor:pointer; padding:0 0 0 6px; text-decoration:underline; }
+        .check-context { font-size:0.8rem; color:#6b7280; margin-bottom:6px; }
+        .check-cluster { background:#fef3c7; color:#92400e; padding:4px 6px; border-radius:4px; font-size:0.82rem; list-style:none; margin-left:-18px; margin-bottom:6px; }
+        table { width:100%; border-collapse:collapse; }
+        th, td { padding:4px 6px; border-bottom:1px solid #e5e7eb; text-align:left; font-size:0.85rem; }
+        th { background:#f3f4f6; }
         button { padding: 8px 14px; border-radius: 6px; border:none; background:#2563eb; color:#fff; cursor:pointer; font-size:0.9rem; }
         button:disabled { opacity:0.6; cursor:default; }
         ul { margin:4px 0 0 18px; padding:0; font-size:0.85rem; }
@@ -46,18 +56,23 @@
             </div>
 
             <div class="card" style="margin-bottom:12px;">
+                <div class="card-title">Active Issues</div>
+                <div id="activeIssues" style="min-height:22px;">—</div>
+            </div>
+
+            <div class="card" style="margin-bottom:12px;">
                 <div class="card-title">Machine Status</div>
                 <div class="field-row"><span class="field-label">Run status</span><span class="field-value" id="runStatus">No data</span></div>
                 <div class="field-row"><span class="field-label">Alarm status</span><span class="field-value" id="alarmStatus">No data</span></div>
                 <div class="field-row"><span class="field-label">Availability (1h)</span><span class="field-value" id="availability1h">No data</span></div>
             </div>
 
-            <div class="card" style="margin-bottom:12px;">
+            <div id="sectionOrderSku" class="card" style="margin-bottom:12px;">
                 <div class="card-title">Current Order / SKU</div>
                 <div class="field-row"><span class="field-label">Order / SKU</span><span class="field-value" id="orderInfo">No active order</span></div>
             </div>
 
-            <div class="card" style="margin-bottom:12px;">
+            <div id="sectionSignalHealth" class="card" style="margin-bottom:12px;">
                 <div class="card-title">Signal Health</div>
                 <div class="field-row"><span class="field-label">Normal</span><span class="field-value" id="signalNormalCount">No data</span></div>
                 <div class="field-row"><span class="field-label">Near-limit</span><span class="field-value" id="signalNearCount">No data</span></div>
@@ -66,12 +81,25 @@
                 <ul id="signalExceptionList"></ul>
             </div>
 
-            <div class="card" style="margin-bottom:12px;">
+            <div id="sectionRecentActivity" class="card" style="margin-bottom:12px;">
                 <div class="card-title">Recent Activity</div>
                 <div class="field-row"><span class="field-label">Stops (24h)</span><span class="field-value" id="recentStops24h">No data</span></div>
                 <div class="field-row"><span class="field-label">Alarms (24h)</span><span class="field-value" id="recentAlarms24h">No data</span></div>
                 <div class="field-row"><span class="field-label">Last alarm</span><span class="field-value" id="recentLastAlarm">No data</span></div>
                 <div class="field-row"><span class="field-label">Last stop</span><span class="field-value" id="recentLastStop">No data</span></div>
+            </div>
+
+            <div id="sectionRecentEvents" class="card" style="margin-bottom:12px;">
+                <div class="card-title">Recent Events (24h)</div>
+                <div id="eventsFilterBar" style="display:none; margin-bottom:6px;"></div>
+                <table>
+                    <thead>
+                        <tr><th>Time</th><th>Type</th><th>State Change</th></tr>
+                    </thead>
+                    <tbody id="recentEventsBody">
+                        <tr><td colspan="3">Loading...</td></tr>
+                    </tbody>
+                </table>
             </div>
 
             <div class="card">
@@ -81,13 +109,24 @@
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-title">Assistant Diagnostics</div>
-            <button id="askButton" type="button">Ask Assistant</button>
-            <div id="assistantResponse"
-                 style="margin-top:10px; max-height:260px; overflow-y:auto;
-                        font-size:0.85rem; line-height:1.4; border-top:1px solid #e5e7eb;
-                        padding-top:8px;"></div>
+        <div>
+            <div class="card" style="margin-bottom:12px;">
+                <div class="card-title">Suggested Checks</div>
+                <div id="suggestedChecksContext" class="check-context"></div>
+                <ul id="suggestedChecks" style="margin-top:4px;">
+                    <li style="color:#6b7280;">Select a machine to see recommended checks.</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Assistant Diagnostics</div>
+                <button id="askButton" type="button">Ask Assistant</button>
+                <div id="lastUpdatedTs" class="last-updated">—</div>
+                <div id="assistantResponse"
+                     style="margin-top:10px; max-height:260px; overflow-y:auto;
+                            font-size:0.85rem; line-height:1.4; border-top:1px solid #e5e7eb;
+                            padding-top:8px;"></div>
+            </div>
         </div>
     </div>
 
