@@ -1,5 +1,6 @@
 using Virtual_Factory.Dtos;
 using Virtual_Factory.Infrastructure;
+using Virtual_Factory.Models;
 
 namespace Virtual_Factory.Services
 {
@@ -11,6 +12,12 @@ namespace Virtual_Factory.Services
         private readonly IWorkOrderAdapter             _workOrders;
         private readonly IScheduleAdapter              _schedules;
         private readonly IMaterialAdapter              _materials;
+        private readonly IProductionOrderAdapter       _productionOrders;
+        private readonly IBomAdapter                   _bom;
+        private readonly IInventoryAdapter             _inventory;
+        private readonly IMaintenanceAdapter           _maintenance;
+        private readonly IEquipmentEventAdapter        _equipmentEvents;
+        private readonly ILogger<OperationalContextService> _log;
 
         public OperationalContextService(
             ILatestPointValueStore store,
@@ -18,7 +25,13 @@ namespace Virtual_Factory.Services
             IEquipmentAvailabilityService availability,
             IWorkOrderAdapter workOrders,
             IScheduleAdapter schedules,
-            IMaterialAdapter materials)
+            IMaterialAdapter materials,
+            IProductionOrderAdapter productionOrders,
+            IBomAdapter bom,
+            IInventoryAdapter inventory,
+            IMaintenanceAdapter maintenance,
+            IEquipmentEventAdapter equipmentEvents,
+            ILogger<OperationalContextService> log)
         {
             _store        = store;
             _eventSummary = eventSummary;
@@ -26,12 +39,47 @@ namespace Virtual_Factory.Services
             _workOrders   = workOrders;
             _schedules    = schedules;
             _materials    = materials;
+            _productionOrders = productionOrders;
+            _bom          = bom;
+            _inventory    = inventory;
+            _log          = log;
         }
 
         public async Task<EquipmentContextDto?> GetContextAsync(
             string equipmentId,
             CancellationToken cancellationToken = default)
         {
+            try
+            {
+                return await GetContextCoreAsync(equipmentId, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                return null;
+            }
+        }
+
+        private async Task<EquipmentContextDto?> GetContextCoreAsync(
+            string equipmentId,
+            CancellationToken cancellationToken)
+        {
+            // Defaults for BOM/inventory context so we can safely use them in the final DTO
+            string? activeSku = null;
+            var bomItems = new List<BomItemDto>();
+            var inventoryItems = new List<InventoryItemDto>();
+            var hasShortage = false;
+
+            var openPmTasks = new List<PreventiveMaintenanceTaskDto>();
+            var hasOverduePm = false;
+            var overduePmCount = 0;
+            var upcomingPmCount = 0;
+
+            var recentEvents = new List<EquipmentEventDto>();
+            EquipmentEventDto? lastAlarmEvent = null;
+            EquipmentEventDto? lastStopEvent = null;
+            TimeSpan? timeSinceLastAlarm = null;
+            TimeSpan? timeSinceLastStop = null;
+
             // ── 1. Live telemetry state ────────────────────────────────────────────
             var equipmentPoints = _store.GetAll()
                 .Where(p => string.Equals(
@@ -46,8 +94,12 @@ namespace Virtual_Factory.Services
                 string.Equals(s.EquipmentId, equipmentId, StringComparison.OrdinalIgnoreCase));
 
             // Unknown equipment — nothing to return
-            if (equipmentPoints.Count == 0 && summary is null)
+            /*if (equipmentPoints.Count == 0
+    && summary is null
+    && !(await _workOrders.GetByEquipmentAsync(equipmentId)).Any())
+            {
                 return null;
+            }*/
 
             // ── 3. Derive current run/alarm state from live topics ─────────────────
             var runState   = "unknown";
@@ -88,16 +140,160 @@ namespace Virtual_Factory.Services
             var avail1h  = await _availability.GetStateAvailabilityAsync(equipmentId, 1);
             var avail24h = await _availability.GetStateAvailabilityAsync(equipmentId, 24);
 
-            // ── 5. Operational data via adapters ───────────────────────────────────
-            var workOrders      = await _workOrders.GetByEquipmentAsync(equipmentId);
-            var scheduleEntries = await _schedules.GetByEquipmentAsync(equipmentId);
-            var materials       = await _materials.GetByEquipmentAsync(equipmentId);
+            // ── 5a. Production order (adapter is in-memory / API-safe) ───────────
+            ProductionOrderDto? activeProductionOrder = null;
+            try
+            {
+                activeProductionOrder = await _productionOrders.GetActiveOrderAsync(equipmentId);
+                activeSku = activeProductionOrder?.Sku;
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _log.LogWarning(ex, "Production-order adapter unavailable for {EquipmentId} — skipping", equipmentId);
+            }
 
-            // Active work order: prefer in-progress, then open; newest start first
+            // ── 5b. BOM + inventory for active SKU ──────────────────────────────
+            if (!string.IsNullOrWhiteSpace(activeSku))
+            {
+                try
+                {
+                    bomItems = await _bom.GetBomBySkuAsync(activeSku);
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    _log.LogWarning(ex, "BOM adapter unavailable for {EquipmentId} — skipping", equipmentId);
+                }
+
+                if (bomItems.Count > 0)
+                {
+                    try
+                    {
+                        var materialIds = bomItems
+                            .Select(b => b.MaterialId)
+                            .Where(id => !string.IsNullOrWhiteSpace(id))
+                            .Distinct(StringComparer.OrdinalIgnoreCase)
+                            .ToList();
+
+                        if (materialIds.Count > 0)
+                        {
+                            inventoryItems = await _inventory.GetInventoryForMaterialsAsync(materialIds);
+
+                            // Determine shortages based on StockStatus or available vs required
+                            var inventoryById = inventoryItems
+                                .ToDictionary(i => i.MaterialId, StringComparer.OrdinalIgnoreCase);
+
+                            foreach (var bom in bomItems)
+                            {
+                                if (!inventoryById.TryGetValue(bom.MaterialId, out var inv))
+                                {
+                                    hasShortage = true;
+                                    break;
+                                }
+
+                                if (string.Equals(inv.StockStatus, "short", StringComparison.OrdinalIgnoreCase) ||
+                                    string.Equals(inv.StockStatus, "at_risk", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    hasShortage = true;
+                                    break;
+                                }
+
+                                var netAvailable = inv.AvailableQuantity - inv.ReservedQuantity;
+                                if (netAvailable < bom.RequiredQuantity)
+                                {
+                                    hasShortage = true;
+                                    break;
+                                }
+                            }
+                        }
+
+            // ── 5c. Preventive maintenance context ──────────────────────────────
+            try
+            {
+                openPmTasks = await _maintenance.GetOpenPmTasksAsync(equipmentId);
+
+                if (openPmTasks.Count > 0)
+                {
+                    var overdue = openPmTasks.Where(t => t.IsOverdue).ToList();
+                    hasOverduePm = overdue.Count > 0;
+                    overduePmCount = overdue.Count;
+
+                    var upcoming = openPmTasks
+                        .Where(t => !t.IsOverdue && t.DueDateUtc > DateTime.UtcNow)
+                        .ToList();
+                    upcomingPmCount = upcoming.Count;
+                }
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _log.LogWarning(ex, "Maintenance adapter unavailable for {EquipmentId} — skipping", equipmentId);
+            }
+
+            // ── 5d. Equipment event history ─────────────────────────────────────
+            try
+            {
+                recentEvents = await _equipmentEvents.GetRecentEventsAsync(equipmentId, 2);
+
+                lastAlarmEvent = await _equipmentEvents.GetLastAlarmAsync(equipmentId);
+                lastStopEvent  = await _equipmentEvents.GetLastStopAsync(equipmentId);
+
+                var nowTs = DateTime.UtcNow;
+                if (lastAlarmEvent is not null)
+                    timeSinceLastAlarm = nowTs - lastAlarmEvent.TimestampUtc;
+                if (lastStopEvent is not null)
+                    timeSinceLastStop = nowTs - lastStopEvent.TimestampUtc;
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _log.LogWarning(ex, "Equipment event adapter unavailable for {EquipmentId} — skipping", equipmentId);
+            }
+                    }
+                    catch (Exception ex) when (ex is not OperationCanceledException)
+                    {
+                        _log.LogWarning(ex, "Inventory adapter unavailable for {EquipmentId} — skipping", equipmentId);
+                    }
+                }
+            }
+
+            // ── 5. Operational data via adapters ───────────────────────────────────
+            // Each adapter makes an HTTP call to the mock API (localhost:5177).  Guard each
+            // call individually so that an unavailable mock service never blocks the
+            // telemetry-based context from being built.
+            IReadOnlyList<WorkOrder> workOrders;
+            try   { workOrders = await _workOrders.GetByEquipmentAsync(equipmentId); }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _log.LogWarning(ex, "Work-order adapter unavailable for {EquipmentId} — skipping", equipmentId);
+                workOrders = [];
+            }
+
+            IReadOnlyList<ScheduleEntry> scheduleEntries;
+            try   { scheduleEntries = await _schedules.GetByEquipmentAsync(equipmentId); }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _log.LogWarning(ex, "Schedule adapter unavailable for {EquipmentId} — skipping", equipmentId);
+                scheduleEntries = [];
+            }
+
+            IReadOnlyList<Material> materials;
+            try   { materials = await _materials.GetByEquipmentAsync(equipmentId); }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _log.LogWarning(ex, "Material adapter unavailable for {EquipmentId} — skipping", equipmentId);
+                materials = [];
+            }
+
+            _log.LogInformation("Work orders for {EquipmentId}: {Count}", equipmentId, workOrders.Count);
+            foreach (var w in workOrders)
+                _log.LogInformation(
+                    "Filtering WO {WorkOrderId}: assetId={AssetId} status={Status}",
+                    w.WorkOrderNumber, w.AssetId, w.Status);
+
+            // Active work order: prefer InProgress, then Open (case-insensitive); newest start first
             WorkOrderDto? activeWorkOrder = null;
             var workOrder = workOrders
-                .Where(w => w.Status == "in-progress" || w.Status == "open")
-                .OrderByDescending(w => w.Status == "in-progress" ? 1 : 0)
+                .Where(w => string.Equals(w.Status, "InProgress", StringComparison.OrdinalIgnoreCase)
+                         || string.Equals(w.Status, "Open", StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(w => string.Equals(w.Status, "InProgress", StringComparison.OrdinalIgnoreCase) ? 1 : 0)
                 .ThenByDescending(w => w.ScheduledStartUtc)
                 .FirstOrDefault();
 
@@ -112,6 +308,28 @@ namespace Virtual_Factory.Services
                     Priority          = workOrder.Priority,
                     ScheduledStartUtc = workOrder.ScheduledStartUtc,
                     ScheduledEndUtc   = workOrder.ScheduledEndUtc,
+                };
+            }
+
+            // Current work order: active statuses only (case-insensitive), newest scheduled start first
+            WorkOrderContextDto? currentWorkOrder = null;
+            var activeStatuses = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                { "Released", "Running", "Scheduled", "InProgress" };
+
+            var currentWo = workOrders
+                .Where(w => activeStatuses.Contains(w.Status, StringComparer.OrdinalIgnoreCase))
+                .OrderByDescending(w => w.ScheduledStartUtc)
+                .FirstOrDefault();
+
+            if (currentWo is not null)
+            {
+                currentWorkOrder = new WorkOrderContextDto
+                {
+                    WorkOrderId       = currentWo.WorkOrderNumber,
+                    Description       = currentWo.Description ?? currentWo.Title,
+                    Status            = currentWo.Status,
+                    ScheduledStartUtc = currentWo.ScheduledStartUtc,
+                    ScheduledEndUtc   = currentWo.ScheduledEndUtc,
                 };
             }
 
@@ -169,9 +387,25 @@ namespace Virtual_Factory.Services
                 AlarmCount24h    = summary?.AlarmCount24h ?? 0,
                 LatestEvent      = summary?.LatestEvent,
                 ActiveWorkOrder  = activeWorkOrder,
+                CurrentWorkOrder = currentWorkOrder,
                 ScheduledProduct = scheduledProduct,
                 MaterialStatus   = materialStatus,
+                ActiveProductionOrder = activeProductionOrder,
+                ActiveSku        = activeSku,
+                BomItems         = bomItems,
+                InventoryItems   = inventoryItems,
+                HasMaterialShortage = hasShortage,
+                OpenPmTasks      = openPmTasks,
+                HasOverduePm     = hasOverduePm,
+                OverduePmCount   = overduePmCount,
+                UpcomingPmCount  = upcomingPmCount,
+                RecentEvents     = recentEvents,
+                LastAlarmEvent   = lastAlarmEvent,
+                LastStopEvent    = lastStopEvent,
+                TimeSinceLastAlarm = timeSinceLastAlarm,
+                TimeSinceLastStop  = timeSinceLastStop,
             };
         }
     }
 }
+

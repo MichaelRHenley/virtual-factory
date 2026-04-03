@@ -165,6 +165,7 @@ C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\rjimswa.dswa.cache.json
 C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\rjsmrazor.dswa.cache.json
 C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\rjsmcshtml.dswa.cache.json
 C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\scopedcss\bundle\Virtual Factory.styles.css
+C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\compressed\c6ydklfc43-{0}-4awov1ush0-4awov1ush0.gz
 C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\staticwebassets.build.json
 C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\staticwebassets.build.json.cache
 C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\staticwebassets.development.json
@@ -176,5 +177,4 @@ C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\refint\Virtual Factory.
 C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\Virtual Factory.pdb
 C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\Virtual Factory.genruntimeconfig.cache
 C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\ref\Virtual Factory.dll
-C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\compressed\c6ydklfc43-{0}-45tiiej16m-45tiiej16m.gz
 C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt

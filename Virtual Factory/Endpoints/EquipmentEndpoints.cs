@@ -84,6 +84,15 @@ namespace Virtual_Factory.Endpoints
                 return context is null ? Results.NotFound() : Results.Ok(context);
             });
 
+            app.MapGet("/api/equipment/{equipmentId}/context/summary", async (
+    string equipmentId,
+    IEquipmentContextSummaryService service,
+    CancellationToken cancellationToken) =>
+            {
+                var summary = await service.GetSummaryAsync(equipmentId, cancellationToken);
+                return summary is null ? Results.NotFound() : Results.Ok(summary);
+            });
+
             return app;
         }
     }

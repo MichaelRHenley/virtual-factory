@@ -26,7 +26,7 @@ namespace Virtual_Factory.Services
                 .AsNoTracking()
                 .Where(x => x.TimestampUtc >= windowStart)
                 .Where(x => x.SignalName == "run-status" || x.SignalName == "alarm-state")
-                .Where(x => x.EquipmentName != null && x.EquipmentName != "")
+                .Where(x => x.EquipmentName != null && x.EquipmentName != "" && x.EquipmentName != "unknown")
                 .OrderBy(x => x.EquipmentName)
                 .ThenBy(x => x.SignalName)
                 .ThenBy(x => x.TimestampUtc)
@@ -111,6 +111,7 @@ namespace Virtual_Factory.Services
                 .AsNoTracking()
                 .Select(x => x.EquipmentName)
                 .Distinct()
+                .Where(x => x != null && x != "" && x != "unknown")
                 .ToListAsync();
 
             var eventsByEquipment = allRunEvents

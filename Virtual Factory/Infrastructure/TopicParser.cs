@@ -29,6 +29,14 @@ namespace Virtual_Factory.Infrastructure
                 return (parts[1], parts[2], parts[3], parts[4]);
             }
 
+            // Enterprise-prefixed topics with fewer than 6 segments are line-level or
+            // area-level aggregates (e.g. enterprise/site/area/line/signal). There is no
+            // equipment segment, so return null rather than misclassifying the line as equipment.
+            if (parts[0].EndsWith("enterprise", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
             // site/area/line/equipment/signal
             if (parts.Length >= 5)
             {

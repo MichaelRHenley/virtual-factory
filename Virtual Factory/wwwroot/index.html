@@ -495,6 +495,9 @@
         let activeEquipmentFilter = null;
         let lastTelemetryUpdate = null;
         let selectedEquipment = null;
+        let assistantRequestInFlight = false;
+        let assistantLastResponse    = "";
+        let assistantLastEquipment   = null;
         let signalHistory = {};
         let summaryMetrics = null;
         let eventSummaryByEquipment = {};
@@ -1185,7 +1188,13 @@
         }
 
         async function renderDetailPanel() {
+            if (assistantRequestInFlight) {
+                console.log("Detail panel refresh skipped");
+                return;
+            }
+
             const panel = document.getElementById("detailPanel");
+            const previousScrollTop = panel ? panel.scrollTop : 0;
 
             if (!selectedEquipment) {
                 panel.innerHTML = `<div class="detail-empty">Select a machine</div>`;
@@ -1315,22 +1324,30 @@
                 if (!ctx) return "";
 
                 const woHtml = (() => {
-                    const wo = ctx.activeWorkOrder;
+                    // Prefer currentWorkOrder (WorkOrderContextDto) then fall back to activeWorkOrder (WorkOrderDto)
+                    const wo = ctx.currentWorkOrder ?? ctx.activeWorkOrder;
                     if (!wo) return `<div class="detail-label" style="grid-column:1/-1"><span class="muted">No active work order</span></div>`;
-                    const priorityClass = wo.priority === "high" || wo.priority === "critical"
-                        ? "badge-red" : wo.priority === "medium" ? "badge-orange" : "badge-gray";
-                    const statusClass  = wo.status === "in-progress" ? "badge-blue" : "badge-gray";
+                    // currentWorkOrder uses workOrderId+description; activeWorkOrder uses workOrderNumber+title+priority
+                    const woNumber = wo.workOrderId ?? wo.workOrderNumber ?? "—";
+                    const woTitle  = wo.description ?? wo.title ?? "—";
+                    const priority = (wo.priority ?? "").toLowerCase();
+                    const status   = (wo.status ?? "").toLowerCase();
+                    const priorityClass = priority === "high" || priority === "critical"
+                        ? "badge-red" : priority === "medium" ? "badge-orange" : "badge-gray";
+                    const statusClass = status === "inprogress" || status === "running"
+                        ? "badge-blue" : status === "released" || status === "scheduled"
+                        ? "badge-orange" : "badge-gray";
                     const start = wo.scheduledStartUtc ? new Date(wo.scheduledStartUtc).toLocaleString() : "—";
                     const end   = wo.scheduledEndUtc   ? new Date(wo.scheduledEndUtc).toLocaleString()   : "—";
                     return `
                         <div class="detail-label">Work order</div>
-                        <div class="detail-value">${wo.workOrderNumber}</div>
+                        <div class="detail-value">${woNumber}</div>
                         <div class="detail-label">Title</div>
-                        <div class="detail-value">${wo.title}</div>
+                        <div class="detail-value">${woTitle}</div>
                         <div class="detail-label">Status</div>
                         <div class="detail-value"><span class="badge ${statusClass}">${wo.status}</span></div>
                         <div class="detail-label">Priority</div>
-                        <div class="detail-value"><span class="badge ${priorityClass}">${wo.priority}</span></div>
+                        <div class="detail-value"><span class="badge ${priorityClass}">${wo.priority ?? "—"}</span></div>
                         <div class="detail-label">Scheduled</div>
                         <div class="detail-value" style="font-size:0.8rem">${start} – ${end}</div>`;
                 })();
@@ -1468,14 +1485,83 @@ ${
                             </div>
                         </div>
                     </div>
-                `;
 
-            
+                    <div class="trend-section">
+                        <div class="trend-title">Assistant</div>
+                        <button id="askAssistantBtn"
+                                style="margin-top:4px;padding:8px 16px;background:#2563eb;color:white;
+                                       border:none;border-radius:6px;cursor:pointer;font-size:0.9rem;
+                                       font-weight:600;">
+                            Ask Assistant
+                        </button>
+                        <div id="assistantOutput" style="display:none;margin-top:12px;padding:12px;
+                             background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;
+                             font-size:0.9rem;line-height:1.6;white-space:pre-wrap;color:#0c4a6e;">
+                        </div>
+                    </div>
+                `;
 
             await renderTrend("trendTemp", selectedEquipment, trendSignals.temperature);
             await renderTrend("trendVibration", selectedEquipment, trendSignals.vibration);
             await renderTrend("trendSpeed", selectedEquipment, trendSignals.speed);
             await renderTrend("trendPressure", selectedEquipment, trendSignals.pressure);
+
+            if (assistantLastEquipment === selectedEquipment && assistantLastResponse) {
+                const savedOutput = document.getElementById("assistantOutput");
+                if (savedOutput) {
+                    savedOutput.textContent = assistantLastResponse;
+                    savedOutput.style.display = "block";
+                }
+            }
+            if (panel) {
+                requestAnimationFrame(() => {
+                    panel.scrollTop = previousScrollTop;
+                });
+            }
+
+            const askBtn = document.getElementById("askAssistantBtn");
+            if (askBtn) {
+                askBtn.addEventListener("click", async () => {
+                    const output = document.getElementById("assistantOutput");
+                    if (!output) { console.error("assistantOutput container not found"); return; }
+
+                    assistantRequestInFlight = true;
+                    console.log("Assistant request started");
+
+                    askBtn.disabled = true;
+                    askBtn.textContent = "Thinking...";
+                    output.style.display = "block";
+                    output.textContent = "Thinking...";
+
+                    try {
+                        const res = await fetch("/api/assistant/ask", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ equipmentName: selectedEquipment ?? null })
+                        });
+                        if (res.ok) {
+                            const data = await res.json();
+                            assistantLastResponse =
+                                data.answer?.trim() ??
+                                data.assistantResponse?.trim() ??
+                                "No response returned.";
+                            assistantLastEquipment = selectedEquipment;
+                            output.textContent = assistantLastResponse;
+                        } else {
+                            output.textContent =
+                                `Assistant error: ${res.status}. Check that Ollama is running.`;
+                        }
+                    } catch (err) {
+                        console.error("askAssistant failed", err);
+                        output.textContent = "Assistant request failed.";
+                    } finally {
+                        assistantRequestInFlight = false;
+                        console.log("Assistant request finished");
+                        askBtn.disabled = false;
+                        askBtn.textContent = "Ask Assistant";
+                    }
+                });
+            }
         }
 
         function renderRows() {
@@ -1592,6 +1678,11 @@ ${
         }
 
         async function loadTelemetry() {
+            if (assistantRequestInFlight) {
+                console.log("Skipping telemetry refresh while assistant request is active");
+                return;
+            }
+
             try {
                 const response = await fetch("/api/points/latest");
 
@@ -1625,7 +1716,9 @@ ${
                 }
 
                 try {
-                    await renderDetailPanel();
+                    if (!assistantRequestInFlight) {
+                        await renderDetailPanel();
+                    }
                     await renderWorstMachines();
                 } catch (err) {
                     console.error("renderDetailPanel failed", err);

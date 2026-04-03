@@ -98,6 +98,72 @@
     ]
   },
   {
+    "ContainingType": "Virtual_Factory.Endpoints.AssistantEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapAssistantEndpoints\u003Eb__0_1",
+    "RelativePath": "api/assistant/ask",
+    "HttpMethod": "POST",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "body",
+        "Type": "Virtual_Factory.Dtos.AssistantAskRequestDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.AssistantEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapAssistantEndpoints\u003Eb__0_0",
+    "RelativePath": "api/assistant/equipment/{equipmentId}",
+    "HttpMethod": "POST",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "equipmentId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.BomInventoryEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapBomInventoryEndpoints\u003Eb__0_0",
+    "RelativePath": "api/bom/{sku}",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "sku",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
     "ContainingType": "Virtual_Factory.Endpoints.AssetEndpoints\u002B\u003C\u003Ec",
     "Method": "\u003CMapAssetEndpoints\u003Eb__0_4",
     "RelativePath": "api/browse",
@@ -123,6 +189,28 @@
     "ContainingType": "Virtual_Factory.Endpoints.EquipmentEndpoints\u002B\u003C\u003Ec",
     "Method": "\u003CMapEquipmentEndpoints\u003Eb__0_7",
     "RelativePath": "api/equipment/{equipmentId}/context",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "equipmentId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.EquipmentEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapEquipmentEndpoints\u003Eb__0_8",
+    "RelativePath": "api/equipment/{equipmentId}/context/summary",
     "HttpMethod": "GET",
     "IsController": false,
     "Order": 0,
@@ -360,6 +448,181 @@
     ]
   },
   {
+    "ContainingType": "Virtual_Factory.Endpoints.EquipmentEventEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapEquipmentEventEndpoints\u003Eb__0_1",
+    "RelativePath": "api/events/last-alarm",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "equipmentId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.EquipmentEventEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapEquipmentEventEndpoints\u003Eb__0_2",
+    "RelativePath": "api/events/last-stop",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "equipmentId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.EquipmentEventEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapEquipmentEventEndpoints\u003Eb__0_0",
+    "RelativePath": "api/events/recent",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "equipmentId",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "hours",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.BomInventoryEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapBomInventoryEndpoints\u003Eb__0_1",
+    "RelativePath": "api/inventory/material/{materialId}",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "materialId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.BomInventoryEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapBomInventoryEndpoints\u003Eb__0_2",
+    "RelativePath": "api/inventory/materials",
+    "HttpMethod": "POST",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.MaintenanceEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapMaintenanceEndpoints\u003Eb__0_0",
+    "RelativePath": "api/maintenance/open",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "equipmentId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.MaintenanceEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapMaintenanceEndpoints\u003Eb__0_1",
+    "RelativePath": "api/maintenance/overdue",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "equipmentId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.MaintenanceEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapMaintenanceEndpoints\u003Eb__0_2",
+    "RelativePath": "api/maintenance/upcoming",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "equipmentId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
     "ContainingType": "Virtual_Factory.Endpoints.MockOperationalEndpoints\u002B\u003C\u003Ec",
     "Method": "\u003CMapMockOperationalEndpoints\u003Eb__0_2",
     "RelativePath": "api/mock/materials",
@@ -477,6 +740,66 @@
     "IsController": false,
     "Order": 0,
     "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.ProductionOrderEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapProductionOrderEndpoints\u003Eb__0_0",
+    "RelativePath": "api/production-orders/",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.ProductionOrderEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapProductionOrderEndpoints\u003Eb__0_1",
+    "RelativePath": "api/production-orders/active",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "equipmentId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.ProductionOrderEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapProductionOrderEndpoints\u003Eb__0_2",
+    "RelativePath": "api/production-orders/scheduled",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "equipmentId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
     "ReturnTypes": [
       {
         "Type": "System.Void",

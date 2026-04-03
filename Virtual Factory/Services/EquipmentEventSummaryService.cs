@@ -17,91 +17,98 @@ namespace Virtual_Factory.Services
         public async Task<List<EquipmentEventSummaryDto>> GetSummaryAsync(
     CancellationToken cancellationToken = default)
         {
-            var now = DateTime.UtcNow;
-            var cutoff = now.AddHours(-24);
-
-            var recentEvents = await _db.EquipmentStateEvents
-                .AsNoTracking()
-                .Where(x => x.TimestampUtc >= cutoff)
-                .ToListAsync(cancellationToken);
-
-            var allEquipment = await _db.EquipmentStateEvents
-                .AsNoTracking()
-                .Select(x => x.EquipmentName)
-                .Distinct()
-                .ToListAsync(cancellationToken);
-
-            // All alarm-state-changed events (no time filter) ordered chronologically so
-            // FindActiveAlarmStart can walk transitions to locate the unmatched alarm open.
-            // No time filter because an active alarm may have started before the 24h window.
-            var alarmTransitionsByEquipment = (await _db.EquipmentStateEvents
-                .AsNoTracking()
-                .Where(x => x.EventType == "alarm-state-changed")
-                .OrderBy(x => x.TimestampUtc)
-                .ToListAsync(cancellationToken))
-                .GroupBy(x => x.EquipmentName, StringComparer.OrdinalIgnoreCase)
-                .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
-
-            var groupedRecent = recentEvents
-                .GroupBy(x => x.EquipmentName, StringComparer.OrdinalIgnoreCase)
-                .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
-
-            var results = allEquipment.Select(equipment =>
+            try
             {
-                groupedRecent.TryGetValue(equipment, out var events);
-                events ??= [];
+                var now = DateTime.UtcNow;
+                var cutoff = now.AddHours(-24);
 
-                var alarmCount = events.Count(x =>
-                    x.EventType == "alarm-state-changed" &&
-                    string.Equals(x.NewState, "alarm", StringComparison.OrdinalIgnoreCase));
+                var recentEvents = await _db.EquipmentStateEvents
+                    .AsNoTracking()
+                    .Where(x => x.TimestampUtc >= cutoff)
+                    .ToListAsync(cancellationToken);
 
-                var stopCount = events.Count(x =>
-                    x.EventType == "run-state-changed" &&
-                    string.Equals(x.NewState, "stopped", StringComparison.OrdinalIgnoreCase));
+                var allEquipment = await _db.EquipmentStateEvents
+                    .AsNoTracking()
+                    .Select(x => x.EquipmentName)
+                    .Distinct()
+                    .ToListAsync(cancellationToken);
 
-                var latestSignificant = events
-                    .Where(x => x.EventType is "alarm-state-changed" or "run-state-changed")
-                    .MaxBy(x => x.TimestampUtc);
+                // All alarm-state-changed events (no time filter) ordered chronologically so
+                // FindActiveAlarmStart can walk transitions to locate the unmatched alarm open.
+                // No time filter because an active alarm may have started before the 24h window.
+                var alarmTransitionsByEquipment = (await _db.EquipmentStateEvents
+                    .AsNoTracking()
+                    .Where(x => x.EventType == "alarm-state-changed")
+                    .OrderBy(x => x.TimestampUtc)
+                    .ToListAsync(cancellationToken))
+                    .GroupBy(x => x.EquipmentName, StringComparer.OrdinalIgnoreCase)
+                    .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
 
-                LatestEventDto? latestEventDto = null;
-                if (latestSignificant != null)
+                var groupedRecent = recentEvents
+                    .GroupBy(x => x.EquipmentName, StringComparer.OrdinalIgnoreCase)
+                    .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
+
+                var results = allEquipment.Select(equipment =>
                 {
-                    latestEventDto = new LatestEventDto
+                    groupedRecent.TryGetValue(equipment, out var events);
+                    events ??= [];
+
+                    var alarmCount = events.Count(x =>
+                        x.EventType == "alarm-state-changed" &&
+                        string.Equals(x.NewState, "alarm", StringComparison.OrdinalIgnoreCase));
+
+                    var stopCount = events.Count(x =>
+                        x.EventType == "run-state-changed" &&
+                        string.Equals(x.NewState, "stopped", StringComparison.OrdinalIgnoreCase));
+
+                    var latestSignificant = events
+                        .Where(x => x.EventType is "alarm-state-changed" or "run-state-changed")
+                        .MaxBy(x => x.TimestampUtc);
+
+                    LatestEventDto? latestEventDto = null;
+                    if (latestSignificant != null)
                     {
-                        EventType = latestSignificant.EventType == "alarm-state-changed" ? "Alarm" : "Stop",
-                        EventName = latestSignificant.EventType,
-                        State = latestSignificant.NewState ?? "Unknown",
-                        StartTimeUtc = latestSignificant.TimestampUtc,
-                        DurationSeconds = (int)(now - latestSignificant.TimestampUtc).TotalSeconds
-                    };
-                }
+                        latestEventDto = new LatestEventDto
+                        {
+                            EventType = latestSignificant.EventType == "alarm-state-changed" ? "Alarm" : "Stop",
+                            EventName = latestSignificant.EventType,
+                            State = latestSignificant.NewState ?? "Unknown",
+                            StartTimeUtc = latestSignificant.TimestampUtc,
+                            DurationSeconds = (int)(now - latestSignificant.TimestampUtc).TotalSeconds
+                        };
+                    }
 
-                CurrentAlarmDto? currentAlarm = null;
-                alarmTransitionsByEquipment.TryGetValue(equipment, out var alarmTransitions);
-                var activeAlarmStart = FindActiveAlarmStart(alarmTransitions);
-                if (activeAlarmStart.HasValue)
-                {
-                    currentAlarm = new CurrentAlarmDto
+                    CurrentAlarmDto? currentAlarm = null;
+                    alarmTransitionsByEquipment.TryGetValue(equipment, out var alarmTransitions);
+                    var activeAlarmStart = FindActiveAlarmStart(alarmTransitions);
+                    if (activeAlarmStart.HasValue)
                     {
-                        EventName = "Alarm",
-                        StartTimeUtc = activeAlarmStart.Value,
-                        DurationSeconds = (int)(now - activeAlarmStart.Value).TotalSeconds
+                        currentAlarm = new CurrentAlarmDto
+                        {
+                            EventName = "Alarm",
+                            StartTimeUtc = activeAlarmStart.Value,
+                            DurationSeconds = (int)(now - activeAlarmStart.Value).TotalSeconds
+                        };
+                    }
+
+                    return new EquipmentEventSummaryDto
+                    {
+                        EquipmentId = equipment,
+                        AlarmCount24h = alarmCount,
+                        StopCount24h = stopCount,
+                        LatestEvent = latestEventDto,
+                        LongestCurrentAlarm = currentAlarm
                     };
-                }
+                })
+                .OrderBy(x => x.EquipmentId)
+                .ToList();
 
-                return new EquipmentEventSummaryDto
-                {
-                    EquipmentId = equipment,
-                    AlarmCount24h = alarmCount,
-                    StopCount24h = stopCount,
-                    LatestEvent = latestEventDto,
-                    LongestCurrentAlarm = currentAlarm
-                };
-            })
-            .OrderBy(x => x.EquipmentId)
-            .ToList();
-
-            return results;
+                return results;
+            }
+            catch (OperationCanceledException)
+            {
+                return [];
+            }
         }
 
         /// <summary>
@@ -132,74 +139,95 @@ namespace Virtual_Factory.Services
     int hours = 24,
     CancellationToken cancellationToken = default)
         {
-            var cutoff = DateTime.UtcNow.AddHours(-hours);
-
-            var events = await _db.EquipmentStateEvents
-                .AsNoTracking()
-                .Where(x =>
-                    x.EquipmentName == equipmentId &&
-                    x.TimestampUtc >= cutoff)
-                .OrderByDescending(x => x.TimestampUtc)
-                .ToListAsync(cancellationToken);
-
-            var results = new List<EquipmentEventTimelineItemDto>();
-
-            for (int i = 0; i < events.Count; i++)
+            try
             {
-                var current = events[i];
-                var previousOlder = i < events.Count - 1 ? events[i + 1] : null;
+                var cutoff = DateTime.UtcNow.AddHours(-hours);
 
-                int? durationSeconds = null;
+                var events = await _db.EquipmentStateEvents
+                    .AsNoTracking()
+                    .Where(x =>
+                        x.EquipmentName == equipmentId &&
+                        x.TimestampUtc >= cutoff)
+                    .OrderByDescending(x => x.TimestampUtc)
+                    .ToListAsync(cancellationToken);
 
-                if (previousOlder != null)
+                var results = new List<EquipmentEventTimelineItemDto>();
+
+                for (int i = 0; i < events.Count; i++)
                 {
-                    durationSeconds = (int)Math.Round(
-                        (current.TimestampUtc - previousOlder.TimestampUtc)
-                        .TotalSeconds);
+                    var current = events[i];
+                    var previousOlder = i < events.Count - 1 ? events[i + 1] : null;
+
+                    int? durationSeconds = null;
+
+                    if (previousOlder != null)
+                    {
+                        durationSeconds = (int)Math.Round(
+                            (current.TimestampUtc - previousOlder.TimestampUtc)
+                            .TotalSeconds);
+                    }
+
+                    results.Add(new EquipmentEventTimelineItemDto
+                    {
+                        Id = current.Id,
+                        EquipmentId = current.EquipmentName,
+                        EventType = current.EventType,
+                        NewState = current.NewState,
+                        PreviousState = current.PreviousState,
+                        Source = current.Source,
+                        TimestampUtc = current.TimestampUtc,
+                        DurationSeconds = durationSeconds
+                    });
                 }
 
-                results.Add(new EquipmentEventTimelineItemDto
-                {
-                    Id = current.Id,
-                    EquipmentId = current.EquipmentName,
-                    EventType = current.EventType,
-                    NewState = current.NewState,
-                    PreviousState = current.PreviousState,
-                    Source = current.Source,
-                    TimestampUtc = current.TimestampUtc,
-                    DurationSeconds = durationSeconds
-                });
+                return results;
             }
-
-            return results;
+            catch (OperationCanceledException)
+            {
+                return [];
+            }
         }
 
         public async Task<DateTime?> GetLastStoppedAsync(
             string equipmentId,
             CancellationToken cancellationToken = default)
         {
-            return await _db.EquipmentStateEvents
-                .AsNoTracking()
-                .Where(x => x.EquipmentName == equipmentId
-                         && x.EventType == "run-state-changed"
-                         && x.NewState == "stopped")
-                .OrderByDescending(x => x.TimestampUtc)
-                .Select(x => (DateTime?)x.TimestampUtc)
-                .FirstOrDefaultAsync(cancellationToken);
+            try
+            {
+                return await _db.EquipmentStateEvents
+                    .AsNoTracking()
+                    .Where(x => x.EquipmentName == equipmentId
+                             && x.EventType == "run-state-changed"
+                             && x.NewState == "stopped")
+                    .OrderByDescending(x => x.TimestampUtc)
+                    .Select(x => (DateTime?)x.TimestampUtc)
+                    .FirstOrDefaultAsync(cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                return null;
+            }
         }
 
         public async Task<DateTime?> GetLastAlarmAsync(
             string equipmentId,
             CancellationToken cancellationToken = default)
         {
-            return await _db.EquipmentStateEvents
-                .AsNoTracking()
-                .Where(x => x.EquipmentName == equipmentId
-                         && x.EventType == "alarm-state-changed"
-                         && x.NewState == "alarm")
-                .OrderByDescending(x => x.TimestampUtc)
-                .Select(x => (DateTime?)x.TimestampUtc)
-                .FirstOrDefaultAsync(cancellationToken);
+            try
+            {
+                return await _db.EquipmentStateEvents
+                    .AsNoTracking()
+                    .Where(x => x.EquipmentName == equipmentId
+                             && x.EventType == "alarm-state-changed"
+                             && x.NewState == "alarm")
+                    .OrderByDescending(x => x.TimestampUtc)
+                    .Select(x => (DateTime?)x.TimestampUtc)
+                    .FirstOrDefaultAsync(cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                return null;
+            }
         }
 
     }

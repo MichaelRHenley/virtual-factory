@@ -514,10 +514,339 @@
           }
         }
       }
+    },
+    "/api/equipment/{equipmentId}/context/summary": {
+      "get": {
+        "tags": [
+          "Virtual Factory"
+        ],
+        "parameters": [
+          {
+            "name": "equipmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assistant/equipment/{equipmentId}": {
+      "post": {
+        "tags": [
+          "Virtual Factory"
+        ],
+        "parameters": [
+          {
+            "name": "equipmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assistant/ask": {
+      "post": {
+        "tags": [
+          "Virtual Factory"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistantAskRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/production-orders": {
+      "get": {
+        "tags": [
+          "Virtual Factory"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/production-orders/active": {
+      "get": {
+        "tags": [
+          "Virtual Factory"
+        ],
+        "parameters": [
+          {
+            "name": "equipmentId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/production-orders/scheduled": {
+      "get": {
+        "tags": [
+          "Virtual Factory"
+        ],
+        "parameters": [
+          {
+            "name": "equipmentId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/bom/{sku}": {
+      "get": {
+        "tags": [
+          "Virtual Factory"
+        ],
+        "parameters": [
+          {
+            "name": "sku",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/inventory/material/{materialId}": {
+      "get": {
+        "tags": [
+          "Virtual Factory"
+        ],
+        "parameters": [
+          {
+            "name": "materialId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/inventory/materials": {
+      "post": {
+        "tags": [
+          "Virtual Factory"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/maintenance/open": {
+      "get": {
+        "tags": [
+          "Virtual Factory"
+        ],
+        "parameters": [
+          {
+            "name": "equipmentId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/maintenance/overdue": {
+      "get": {
+        "tags": [
+          "Virtual Factory"
+        ],
+        "parameters": [
+          {
+            "name": "equipmentId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/maintenance/upcoming": {
+      "get": {
+        "tags": [
+          "Virtual Factory"
+        ],
+        "parameters": [
+          {
+            "name": "equipmentId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/events/recent": {
+      "get": {
+        "tags": [
+          "Virtual Factory"
+        ],
+        "parameters": [
+          {
+            "name": "equipmentId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hours",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/events/last-alarm": {
+      "get": {
+        "tags": [
+          "Virtual Factory"
+        ],
+        "parameters": [
+          {
+            "name": "equipmentId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/events/last-stop": {
+      "get": {
+        "tags": [
+          "Virtual Factory"
+        ],
+        "parameters": [
+          {
+            "name": "equipmentId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AssistantAskRequestDto": {
+        "type": "object",
+        "properties": {
+          "equipmentName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "WritePointRequest": {
         "type": "object",
         "properties": {

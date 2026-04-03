@@ -23,7 +23,20 @@ void ConfigureMockClient(HttpClient c) =>
 builder.Services.AddHttpClient<IWorkOrderAdapter, WorkOrderAdapter>(ConfigureMockClient);
 builder.Services.AddHttpClient<IScheduleAdapter, ScheduleAdapter>(ConfigureMockClient);
 builder.Services.AddHttpClient<IMaterialAdapter, MaterialAdapter>(ConfigureMockClient);
+builder.Services.AddScoped<IProductionOrderAdapter, SeededProductionOrderAdapter>();
+builder.Services.AddSingleton<IBomAdapter, SeededBomAdapter>();
+builder.Services.AddSingleton<IInventoryAdapter, SeededInventoryAdapter>();
+builder.Services.AddScoped<IMaintenanceAdapter, SeededMaintenanceAdapter>();
+builder.Services.AddScoped<IEquipmentEventAdapter, SeededEquipmentEventAdapter>();
+builder.Services.AddSingleton<ISignalMetadataProvider, SeededSignalMetadataProvider>();
+builder.Services.AddSingleton<ISkuRunProfileProvider, SeededSkuRunProfileProvider>();
 builder.Services.AddScoped<IOperationalContextService, OperationalContextService>();
+builder.Services.AddScoped<IEquipmentContextSummaryService, EquipmentContextSummaryService>();
+builder.Services.AddScoped<IEquipmentAssistantContextBuilder, EquipmentAssistantContextBuilder>();
+
+var ollamaBaseUrl = builder.Configuration["Ollama:BaseUrl"] ?? "http://localhost:11434";
+builder.Services.AddHttpClient<IAssistantService, AssistantService>(client =>
+    client.BaseAddress = new Uri(ollamaBaseUrl.TrimEnd('/') + "/"));
 builder.Services.AddSingleton<IAssetHierarchyService, AssetHierarchyService>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -40,14 +53,19 @@ if (app.Environment.IsDevelopment())
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
-
+app.UseRouting();   
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 app.MapAssetEndpoints();
 app.MapTelemetryEndpoints();
 app.MapEquipmentEndpoints();
+app.MapProductionOrderEndpoints();
+app.MapBomInventoryEndpoints();
+app.MapMaintenanceEndpoints();
+app.MapEquipmentEventEndpoints();
 app.MapMockOperationalEndpoints();
+app.MapAssistantEndpoints();
 
 await app.Services.GetRequiredService<ISeedLoader>().LoadAsync();
 

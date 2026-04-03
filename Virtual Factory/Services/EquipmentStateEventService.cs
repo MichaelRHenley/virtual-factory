@@ -41,6 +41,12 @@ namespace Virtual_Factory.Services
                 foreach (var group in grouped)
                 {
                     var equipmentName = group.Key;
+
+                    // Skip topics that could not be resolved to an equipment-level name
+                    // (e.g. line-aggregate topics that lack an equipment segment).
+                    if (string.Equals(equipmentName, "unknown", StringComparison.OrdinalIgnoreCase))
+                        continue;
+
                     var rows = group.ToList();
 
                     var newestTimestamp = rows.Max(x => x.TimestampUtc.UtcDateTime);
