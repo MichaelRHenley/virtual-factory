@@ -180,16 +180,7 @@
         askButton.textContent = "Thinking...";
         assistantResponseEl.textContent = "Thinking...";
         try {
-            const res = await fetch("/api/assistant/ask", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ equipmentName: currentEquipment })
-            });
-            if (!res.ok) {
-                assistantResponseEl.textContent = `Assistant error: ${res.status}`;
-                return;
-            }
-            const data = await res.json();
+            const data = await window.AssistantClient.fetchAssistantEquipment(currentEquipment);
             const raw = data.answer ?? data.assistantResponse ?? "No response.";
             assistantResponseEl.textContent = formatSupervisorAssistantAnswer(raw);
         } catch (err) {
@@ -201,84 +192,56 @@
         }
     }
 
-    function splitIntoSections(raw) {
-        if (!raw) return { __all: "" };
-        const lines = raw.split(/\r?\n/);
-        const sections = {};
-        let current = "__preamble";
-        sections[current] = [];
+    function extractAssistantSection(text, heading) {
+        if (!text || !heading) return null;
+        const lines = text.split(/\r?\n/);
+        const target = `### ${heading}`.toLowerCase();
+        let inSection = false;
+        const collected = [];
 
-        lines.forEach(line => {
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
             const trimmed = line.trim();
-            if (!trimmed) return;
-
-            const m = /^#+\s*(.+)$/.exec(trimmed);
-            if (m) {
-                current = m[1].trim().toLowerCase();
-                if (!sections[current]) sections[current] = [];
-            } else {
-                sections[current].push(trimmed);
+            if (!inSection) {
+                if (trimmed.toLowerCase() === target) {
+                    inSection = true;
+                }
+                continue;
             }
-        });
 
-        const result = {};
-        Object.keys(sections).forEach(k => {
-            result[k] = sections[k].join("\n").trim();
-        });
-        result.__all = raw.trim();
-        return result;
-    }
-
-    function pickFirstNonEmpty(sections, keys) {
-        for (const k of keys) {
-            const v = sections[k.toLowerCase()];
-            if (v && v.trim().length > 0) return v.trim();
+            if (/^###\s+/.test(trimmed)) {
+                break;
+            }
+            collected.push(line);
         }
-        return null;
+
+        const textBlock = collected.join("\n").trim();
+        return textBlock.length ? textBlock : null;
     }
 
     function formatSupervisorAssistantAnswer(raw) {
         if (!raw) return "No response.";
-        const sections = splitIntoSections(raw);
 
-        const currentCondition = pickFirstNonEmpty(sections, [
-            "current condition",
-            "condition",
-            "status"
-        ]);
+        const currentCondition = extractAssistantSection(raw, "Current Condition");
+        let riskAssessment = extractAssistantSection(raw, "Risk Assessment");
+        const signalHealth = extractAssistantSection(raw, "Signal Health");
+        const recentActivity = extractAssistantSection(raw, "Recent Activity");
 
-        const riskAssessment = pickFirstNonEmpty(sections, [
-            "risk assessment",
-            "risk",
-            "risks"
-        ]);
-
-        const keyExceptions = pickFirstNonEmpty(sections, [
-            "key exceptions",
-            "exceptions",
-            "issues",
-            "alerts"
-        ]);
-
-        const suggestedPriority = pickFirstNonEmpty(sections, [
-            "suggested priority",
-            "priority",
-            "priorities"
-        ]);
+        if (!riskAssessment && signalHealth) {
+            riskAssessment = signalHealth;
+        }
 
         const lines = [];
-        if (currentCondition) lines.push("Current Condition: " + currentCondition);
-        if (riskAssessment) lines.push("Risk Assessment: " + riskAssessment);
-        if (keyExceptions) lines.push("Key Exceptions: " + keyExceptions);
-        if (suggestedPriority) lines.push("Suggested Priority: " + suggestedPriority);
+        if (currentCondition) lines.push("Current Condition: " + currentCondition.replace(/\s+/g, " "));
+        if (riskAssessment) lines.push("Risk Assessment: " + riskAssessment.replace(/\s+/g, " "));
+        if (recentActivity) lines.push("Recent Activity: " + recentActivity.replace(/\s+/g, " "));
 
         if (!lines.length) {
-            const fallback = sections.__all || raw;
-            const shortLines = fallback.split(/\r?\n/)
+            const fallbackLines = raw.split(/\r?\n/)
                 .map(l => l.trim())
                 .filter(l => l.length > 0)
                 .slice(0, 4);
-            return shortLines.join("\n");
+            return fallbackLines.join("\n");
         }
 
         return lines

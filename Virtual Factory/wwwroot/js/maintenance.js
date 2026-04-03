@@ -205,15 +205,14 @@
 
     async function loadAssistantContext(equipment) {
         try {
-            const res = await fetch(`/api/assistant/context/${encodeURIComponent(equipment)}`);
-            if (!res.ok) {
+            const ctx = await window.AssistantClient.fetchAssistantContext(equipment);
+            if (!ctx) {
                 signalNormalCountEl.textContent = "No data";
                 signalNearCountEl.textContent = "No data";
                 signalAbnormalCountEl.textContent = "No data";
                 signalExceptionListEl.innerHTML = "";
                 return;
             }
-            const ctx = await res.json();
             const input = ctx.inputSummary || "";
 
             const lines = input.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
@@ -245,16 +244,7 @@
         askButton.textContent = "Thinking...";
         assistantResponseEl.textContent = "Thinking...";
         try {
-            const res = await fetch("/api/assistant/ask", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ equipmentName: currentEquipment })
-            });
-            if (!res.ok) {
-                assistantResponseEl.textContent = `Assistant error: ${res.status}`;
-                return;
-            }
-            const data = await res.json();
+            const data = await window.AssistantClient.fetchAssistantEquipment(currentEquipment);
             const raw = data.answer ?? data.assistantResponse ?? "No response.";
             assistantResponseEl.textContent = formatMaintenanceAssistantAnswer(raw);
         } catch (err) {
@@ -266,77 +256,41 @@
         }
     }
 
-    function splitIntoSections(raw) {
-        if (!raw) return { __all: "" };
-        const lines = raw.split(/\r?\n/);
-        const sections = {};
-        let current = "__preamble";
-        sections[current] = [];
+    function extractAssistantSection(text, heading) {
+        if (!text || !heading) return null;
+        const lines = text.split(/\r?\n/);
+        const target = `### ${heading}`.toLowerCase();
+        let inSection = false;
+        const collected = [];
 
-        lines.forEach(line => {
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
             const trimmed = line.trim();
-            if (!trimmed) return;
-
-            const m = /^#+\s*(.+)$/.exec(trimmed);
-            if (m) {
-                current = m[1].trim().toLowerCase();
-                if (!sections[current]) sections[current] = [];
-            } else {
-                sections[current].push(trimmed);
+            if (!inSection) {
+                if (trimmed.toLowerCase() === target) {
+                    inSection = true;
+                }
+                continue;
             }
-        });
 
-        const result = {};
-        Object.keys(sections).forEach(k => {
-            result[k] = sections[k].join("\n").trim();
-        });
-        result.__all = raw.trim();
-        return result;
-    }
-
-    function pickFirstNonEmpty(sections, keys) {
-        for (const k of keys) {
-            const v = sections[k.toLowerCase()];
-            if (v && v.trim().length > 0) return v.trim();
+            if (/^###\s+/.test(trimmed)) {
+                break;
+            }
+            collected.push(line);
         }
-        return null;
+
+        const textBlock = collected.join("\n").trim();
+        return textBlock.length ? textBlock : null;
     }
 
     function formatMaintenanceAssistantAnswer(raw) {
         if (!raw) return "No response.";
-        const sections = splitIntoSections(raw);
 
-        const currentCondition = pickFirstNonEmpty(sections, [
-            "current condition",
-            "condition",
-            "status"
-        ]);
-
-        const signalHealth = pickFirstNonEmpty(sections, [
-            "signal health",
-            "signals",
-            "telemetry"
-        ]);
-
-        const recentActivity = pickFirstNonEmpty(sections, [
-            "recent activity",
-            "recent events",
-            "last 24h",
-            "events"
-        ]);
-
-        const maintenanceStatus = pickFirstNonEmpty(sections, [
-            "maintenance status",
-            "maintenance",
-            "pm status"
-        ]);
-
-        const suggestedChecks = pickFirstNonEmpty(sections, [
-            "suggested checks",
-            "checks",
-            "inspection checks",
-            "troubleshooting steps"
-        ]);
+        const currentCondition = extractAssistantSection(raw, "Current Condition");
+        const signalHealth = extractAssistantSection(raw, "Signal Health");
+        const recentActivity = extractAssistantSection(raw, "Recent Activity");
+        const maintenanceStatus = extractAssistantSection(raw, "Maintenance Status");
+        const suggestedChecks = extractAssistantSection(raw, "Suggested Checks");
 
         const lines = [];
         if (currentCondition) {
@@ -361,7 +315,7 @@
         }
 
         if (!lines.length) {
-            return sections.__all || raw;
+            return raw;
         }
 
         return lines.join("\n");

@@ -129,16 +129,7 @@
         askButton.textContent = "Thinking...";
         assistantResponseEl.textContent = "Thinking...";
         try {
-            const res = await fetch("/api/assistant/ask", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ equipmentName: currentEquipment })
-            });
-            if (!res.ok) {
-                assistantResponseEl.textContent = `Assistant error: ${res.status}`;
-                return;
-            }
-            const data = await res.json();
+            const data = await window.AssistantClient.fetchAssistantEquipment(currentEquipment);
             const raw = data.answer ?? data.assistantResponse ?? "No response.";
             assistantResponseEl.textContent = formatOperatorAssistantAnswer(raw);
         } catch (err) {
@@ -150,86 +141,61 @@
         }
     }
 
-    function splitIntoSections(raw) {
-        if (!raw) return { __all: "" };
-        const lines = raw.split(/\r?\n/);
-        const sections = {};
-        let current = "__preamble";
-        sections[current] = [];
+    function extractAssistantSection(text, heading) {
+        if (!text || !heading) return null;
+        const lines = text.split(/\r?\n/);
+        const target = `### ${heading}`.toLowerCase();
+        let inSection = false;
+        const collected = [];
 
-        lines.forEach(line => {
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
             const trimmed = line.trim();
-            if (!trimmed) return;
-
-            const m = /^#+\s*(.+)$/.exec(trimmed);
-            if (m) {
-                current = m[1].trim().toLowerCase();
-                if (!sections[current]) sections[current] = [];
-            } else {
-                sections[current].push(trimmed);
+            if (!inSection) {
+                if (trimmed.toLowerCase() === target) {
+                    inSection = true;
+                }
+                continue;
             }
-        });
 
-        const result = {};
-        Object.keys(sections).forEach(k => {
-            result[k] = sections[k].join("\n").trim();
-        });
-        result.__all = raw.trim();
-        return result;
-    }
-
-    function pickFirstNonEmpty(sections, keys) {
-        for (const k of keys) {
-            const v = sections[k.toLowerCase()];
-            if (v && v.trim().length > 0) return v.trim();
+            if (/^###\s+/.test(trimmed)) {
+                break;
+            }
+            collected.push(line);
         }
-        return null;
+
+        const textBlock = collected.join("\n").trim();
+        return textBlock.length ? textBlock : null;
     }
 
     function formatOperatorAssistantAnswer(raw) {
         if (!raw) return "No response.";
-        const sections = splitIntoSections(raw);
 
-        const currentCondition = pickFirstNonEmpty(sections, [
-            "current condition",
-            "condition",
-            "status"
-        ]);
+        const currentCondition = extractAssistantSection(raw, "Current Condition");
+        const operationalContext = extractAssistantSection(raw, "Operational Context");
+        let suggestedChecks = extractAssistantSection(raw, "Suggested Checks");
 
-        const currentOrder = pickFirstNonEmpty(sections, [
-            "current order / progress",
-            "current order",
-            "order progress",
-            "production"
-        ]);
-
-        const watchItem = pickFirstNonEmpty(sections, [
-            "immediate watch item",
-            "watch items",
-            "watch item",
-            "alerts"
-        ]);
-
-        const nextAction = pickFirstNonEmpty(sections, [
-            "next action",
-            "next actions",
-            "recommended actions",
-            "operator actions"
-        ]);
+        if (suggestedChecks) {
+            const bulletLines = suggestedChecks
+                .split(/\r?\n/)
+                .map(l => l.trim())
+                .filter(l => l.length > 0 && (l.startsWith("-") || l.startsWith("*") || l.match(/^\d+\./)));
+            if (bulletLines.length > 0) {
+                suggestedChecks = bulletLines[0];
+            }
+        }
 
         const lines = [];
-        if (currentCondition) lines.push("Current Condition: " + currentCondition);
-        if (currentOrder) lines.push("Current Order / Progress: " + currentOrder);
-        if (watchItem) lines.push("Immediate Watch Item: " + watchItem);
-        if (nextAction) lines.push("Next Action: " + nextAction);
+        if (currentCondition) lines.push("Current Condition: " + currentCondition.replace(/\s+/g, " "));
+        if (operationalContext) lines.push("Operational Context: " + operationalContext.replace(/\s+/g, " "));
+        if (suggestedChecks) lines.push("Suggested Check: " + suggestedChecks.replace(/^[*-]\s*/, ""));
 
         if (!lines.length) {
-            const fallback = sections.__all || raw;
-            const shortLines = fallback.split(/\r?\n/)
+            const fallbackLines = raw.split(/\r?\n/)
                 .map(l => l.trim())
                 .filter(l => l.length > 0)
                 .slice(0, 4);
-            return shortLines.join("\n");
+            return fallbackLines.join("\n");
         }
 
         return lines
