@@ -256,7 +256,7 @@
             }
             const data = await res.json();
             const raw = data.answer ?? data.assistantResponse ?? "No response.";
-            assistantResponseEl.textContent = formatAssistantAnswer(raw);
+            assistantResponseEl.textContent = formatMaintenanceAssistantAnswer(raw);
         } catch (err) {
             console.error("askAssistant failed", err);
             assistantResponseEl.textContent = "Assistant request failed.";
@@ -266,22 +266,105 @@
         }
     }
 
-    function formatAssistantAnswer(raw) {
-        if (!raw) return "No response.";
+    function splitIntoSections(raw) {
+        if (!raw) return { __all: "" };
         const lines = raw.split(/\r?\n/);
-        const chunks = [];
-        lines.forEach(l => {
-            const trimmed = l.trim();
+        const sections = {};
+        let current = "__preamble";
+        sections[current] = [];
+
+        lines.forEach(line => {
+            const trimmed = line.trim();
             if (!trimmed) return;
 
-            if (trimmed.startsWith("### ")) {
-                // treat as section heading
-                chunks.push(trimmed.substring(4).toUpperCase());
+            const m = /^#+\s*(.+)$/.exec(trimmed);
+            if (m) {
+                current = m[1].trim().toLowerCase();
+                if (!sections[current]) sections[current] = [];
             } else {
-                chunks.push("  " + trimmed);
+                sections[current].push(trimmed);
             }
         });
-        return chunks.join("\n");
+
+        const result = {};
+        Object.keys(sections).forEach(k => {
+            result[k] = sections[k].join("\n").trim();
+        });
+        result.__all = raw.trim();
+        return result;
+    }
+
+    function pickFirstNonEmpty(sections, keys) {
+        for (const k of keys) {
+            const v = sections[k.toLowerCase()];
+            if (v && v.trim().length > 0) return v.trim();
+        }
+        return null;
+    }
+
+    function formatMaintenanceAssistantAnswer(raw) {
+        if (!raw) return "No response.";
+        const sections = splitIntoSections(raw);
+
+        const currentCondition = pickFirstNonEmpty(sections, [
+            "current condition",
+            "condition",
+            "status"
+        ]);
+
+        const signalHealth = pickFirstNonEmpty(sections, [
+            "signal health",
+            "signals",
+            "telemetry"
+        ]);
+
+        const recentActivity = pickFirstNonEmpty(sections, [
+            "recent activity",
+            "recent events",
+            "last 24h",
+            "events"
+        ]);
+
+        const maintenanceStatus = pickFirstNonEmpty(sections, [
+            "maintenance status",
+            "maintenance",
+            "pm status"
+        ]);
+
+        const suggestedChecks = pickFirstNonEmpty(sections, [
+            "suggested checks",
+            "checks",
+            "inspection checks",
+            "troubleshooting steps"
+        ]);
+
+        const lines = [];
+        if (currentCondition) {
+            lines.push("CURRENT CONDITION");
+            lines.push("  " + currentCondition);
+        }
+        if (signalHealth) {
+            lines.push("\nSIGNAL HEALTH");
+            lines.push("  " + signalHealth);
+        }
+        if (recentActivity) {
+            lines.push("\nRECENT ACTIVITY");
+            lines.push("  " + recentActivity);
+        }
+        if (maintenanceStatus) {
+            lines.push("\nMAINTENANCE STATUS");
+            lines.push("  " + maintenanceStatus);
+        }
+        if (suggestedChecks) {
+            lines.push("\nSUGGESTED CHECKS");
+            lines.push("  " + suggestedChecks);
+        }
+
+        if (!lines.length) {
+            return sections.__all || raw;
+        }
+
+        return lines.join("\n");
     }
 
     if (equipmentSelect) {

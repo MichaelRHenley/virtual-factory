@@ -191,7 +191,7 @@
             }
             const data = await res.json();
             const raw = data.answer ?? data.assistantResponse ?? "No response.";
-            assistantResponseEl.textContent = summariseAssistantAnswer(raw);
+            assistantResponseEl.textContent = formatSupervisorAssistantAnswer(raw);
         } catch (err) {
             console.error("askAssistant failed", err);
             assistantResponseEl.textContent = "Assistant request failed.";
@@ -201,12 +201,89 @@
         }
     }
 
-    function summariseAssistantAnswer(raw) {
+    function splitIntoSections(raw) {
+        if (!raw) return { __all: "" };
+        const lines = raw.split(/\r?\n/);
+        const sections = {};
+        let current = "__preamble";
+        sections[current] = [];
+
+        lines.forEach(line => {
+            const trimmed = line.trim();
+            if (!trimmed) return;
+
+            const m = /^#+\s*(.+)$/.exec(trimmed);
+            if (m) {
+                current = m[1].trim().toLowerCase();
+                if (!sections[current]) sections[current] = [];
+            } else {
+                sections[current].push(trimmed);
+            }
+        });
+
+        const result = {};
+        Object.keys(sections).forEach(k => {
+            result[k] = sections[k].join("\n").trim();
+        });
+        result.__all = raw.trim();
+        return result;
+    }
+
+    function pickFirstNonEmpty(sections, keys) {
+        for (const k of keys) {
+            const v = sections[k.toLowerCase()];
+            if (v && v.trim().length > 0) return v.trim();
+        }
+        return null;
+    }
+
+    function formatSupervisorAssistantAnswer(raw) {
         if (!raw) return "No response.";
-        const lines = raw.split(/\r?\n/)
-            .map(l => l.trim())
-            .filter(l => l.length > 0);
-        return lines.slice(0, 4).join("\n");
+        const sections = splitIntoSections(raw);
+
+        const currentCondition = pickFirstNonEmpty(sections, [
+            "current condition",
+            "condition",
+            "status"
+        ]);
+
+        const riskAssessment = pickFirstNonEmpty(sections, [
+            "risk assessment",
+            "risk",
+            "risks"
+        ]);
+
+        const keyExceptions = pickFirstNonEmpty(sections, [
+            "key exceptions",
+            "exceptions",
+            "issues",
+            "alerts"
+        ]);
+
+        const suggestedPriority = pickFirstNonEmpty(sections, [
+            "suggested priority",
+            "priority",
+            "priorities"
+        ]);
+
+        const lines = [];
+        if (currentCondition) lines.push("Current Condition: " + currentCondition);
+        if (riskAssessment) lines.push("Risk Assessment: " + riskAssessment);
+        if (keyExceptions) lines.push("Key Exceptions: " + keyExceptions);
+        if (suggestedPriority) lines.push("Suggested Priority: " + suggestedPriority);
+
+        if (!lines.length) {
+            const fallback = sections.__all || raw;
+            const shortLines = fallback.split(/\r?\n/)
+                .map(l => l.trim())
+                .filter(l => l.length > 0)
+                .slice(0, 4);
+            return shortLines.join("\n");
+        }
+
+        return lines
+            .map(l => (l.length > 260 ? l.substring(0, 257) + "..." : l))
+            .join("\n");
     }
 
     if (drilldownSelect) {
