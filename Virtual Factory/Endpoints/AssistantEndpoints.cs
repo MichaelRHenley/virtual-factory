@@ -8,6 +8,31 @@ namespace Virtual_Factory.Endpoints
         public static IEndpointRouteBuilder MapAssistantEndpoints(
             this IEndpointRouteBuilder app)
         {
+            app.MapGet("/api/assistant/context/{equipmentId}", async (
+                string equipmentId,
+                IEquipmentAssistantContextBuilder builder,
+                CancellationToken cancellationToken) =>
+            {
+                var ctx = await builder.BuildAsync(equipmentId, cancellationToken);
+
+                if (ctx is null)
+                {
+                    return Results.NotFound();
+                }
+
+                var response = new
+                {
+                    equipmentId = ctx.EquipmentId,
+                    inputSummary = ctx.InputSummary,
+                    contextSummary = ctx.ContextSummary,
+                    signalHealthSummary = ctx.InputSummary,
+                    recentActivitySummary = ctx.ContextSummary,
+                    maintenanceStatusSummary = ctx.ContextSummary
+                };
+
+                return Results.Ok(response);
+            });
+
             app.MapPost("/api/assistant/equipment/{equipmentId}", async (
                 string equipmentId,
                 IAssistantService service,

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Virtual Factory - Operator Console</title>
+    <style>
+        body { font-family: Arial, Helvetica, sans-serif; margin: 20px; background: #f4f6f8; color: #222; }
+        h1 { margin-bottom: 8px; }
+        .subtext { margin-bottom: 16px; color: #666; }
+        nav a { margin-right: 12px; }
+        .layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 16px; align-items: flex-start; }
+        .card { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+        .field-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: .05em; color: #666; margin-top: 8px; }
+        .field-value { font-size: 1rem; font-weight: 600; margin-top: 2px; }
+        select { width: 100%; padding: 6px 8px; border-radius: 4px; border: 1px solid #ccc; }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; }
+        .badge-green { background:#dcfce7;color:#166534; }
+        .badge-red { background:#fee2e2;color:#991b1b; }
+        .badge-gray { background:#e5e7eb;color:#374151; }
+        .progress-bar { position: relative; height: 10px; border-radius: 999px; background:#e5e7eb; overflow:hidden; margin-top:4px; }
+        .progress-fill { position:absolute;left:0;top:0;bottom:0;background:#2563eb; }
+        #assistantResponse { white-space: pre-wrap; font-size:0.9rem; line-height:1.4; }
+        button { padding: 8px 14px; border-radius: 6px; border:none; background:#2563eb; color:#fff; cursor:pointer; font-size:0.9rem; }
+        button:disabled { opacity:0.6; cursor:default; }
+    </style>
+</head>
+<body>
+    <nav style="margin-bottom: 12px;">
+        <a href="/index.html">Dashboard</a>
+        <a href="/operator.html">Operator</a>
+        <a href="/maintenance.html">Maintenance</a>
+        <a href="/supervisor.html">Supervisor</a>
+    </nav>
+
+    <h1>Operator Console</h1>
+    <div class="subtext">Quick view for a single machine</div>
+
+    <div class="layout">
+        <div class="card">
+            <div class="field-label">Machine</div>
+            <select id="equipmentSelect">
+                <option>Loading...</option>
+            </select>
+
+            <div class="field-label">Run Status</div>
+            <div class="field-value" id="runStatus">--</div>
+
+            <div class="field-label">Alarm Status</div>
+            <div class="field-value" id="alarmStatus">--</div>
+
+            <div class="field-label">Availability (1h)</div>
+            <div class="field-value" id="availability1h">--</div>
+
+            <div class="field-label">Current Order / SKU</div>
+            <div class="field-value" id="orderInfo">--</div>
+
+            <div class="field-label">Order Progress</div>
+            <div class="field-value" id="orderProgressText">--</div>
+            <div class="progress-bar"><div class="progress-fill" id="orderProgressFill" style="width:0%;"></div></div>
+        </div>
+
+        <div class="card">
+            <div class="field-label">Assistant</div>
+            <button id="askButton" type="button">Ask Assistant</button>
+            <div id="assistantResponse" style="margin-top:10px; max-height:160px; overflow-y:auto; font-size:0.85rem; line-height:1.4;"></div>
+        </div>
+    </div>
+
+    <script src="/js/operator.js"></script>
+</body>
+</html>

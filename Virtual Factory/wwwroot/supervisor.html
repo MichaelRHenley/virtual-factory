@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Virtual Factory - Supervisor Console</title>
+    <style>
+        body { font-family: Arial, Helvetica, sans-serif; margin: 20px; background: #f4f6f8; color: #222; }
+        h1 { margin-bottom: 8px; }
+        .subtext { margin-bottom: 16px; color: #666; }
+        nav a { margin-right: 12px; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+        .card { background: #fff; border-radius: 8px; padding: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+        .kpi-label { font-size:0.8rem; text-transform:uppercase; letter-spacing:.05em; color:#666; }
+        .kpi-value { font-size:1.4rem; font-weight:700; margin-top:4px; }
+        .layout { display:grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1.3fr); gap:16px; align-items:flex-start; }
+        table { width:100%; border-collapse:collapse; font-size:0.9rem; }
+        th, td { padding:6px 8px; border-bottom:1px solid #e5e7eb; text-align:left; }
+        th { background:#f3f4f6; }
+        select { width: 100%; padding: 6px 8px; border-radius: 4px; border: 1px solid #ccc; }
+        button { padding: 8px 14px; border-radius: 6px; border:none; background:#2563eb; color:#fff; cursor:pointer; font-size:0.9rem; }
+        button:disabled { opacity:0.6; cursor:default; }
+        #assistantResponse { white-space:pre-wrap; font-size:0.9rem; line-height:1.4; margin-top:8px; }
+        .field-label { font-size:0.8rem; text-transform:uppercase; letter-spacing:.05em; color:#666; margin-top:8px; }
+        .field-value { font-size:1rem; font-weight:600; margin-top:2px; }
+    </style>
+</head>
+<body>
+    <nav style="margin-bottom: 12px;">
+        <a href="/index.html">Dashboard</a>
+        <a href="/operator.html">Operator</a>
+        <a href="/maintenance.html">Maintenance</a>
+        <a href="/supervisor.html">Supervisor</a>
+    </nav>
+
+    <h1>Supervisor Console</h1>
+    <div class="subtext">Fleet overview and drilldown</div>
+
+    <div class="kpi-grid">
+        <div class="card">
+            <div class="kpi-label">Total Machines</div>
+            <div class="kpi-value" id="kpiTotal">--</div>
+        </div>
+        <div class="card">
+            <div class="kpi-label">Running</div>
+            <div class="kpi-value" id="kpiRunning">--</div>
+        </div>
+        <div class="card">
+            <div class="kpi-label">Alarmed</div>
+            <div class="kpi-value" id="kpiAlarmed">--</div>
+        </div>
+        <div class="card">
+            <div class="kpi-label">Avg Availability (1h)</div>
+            <div class="kpi-value" id="kpiAvailability">--</div>
+        </div>
+    </div>
+
+    <div class="layout">
+        <div class="card">
+            <h3>Worst Availability (1h)</h3>
+            <table>
+                <thead>
+                    <tr><th>Equipment</th><th>Running %</th></tr>
+                </thead>
+                <tbody id="worstTableBody">
+                    <tr><td colspan="2">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <div class="field-label">Drilldown Machine</div>
+            <select id="drilldownSelect" style="margin-bottom:8px;"><option>Loading...</option></select>
+
+            <div class="field-label" style="margin-top:6px;">Run Status</div>
+            <div class="field-value" id="ddRunStatus">--</div>
+
+            <div class="field-label" style="margin-top:6px;">Alarm Status</div>
+            <div class="field-value" id="ddAlarmStatus">--</div>
+
+            <div class="field-label" style="margin-top:6px;">Availability (1h)</div>
+            <div class="field-value" id="ddAvailability1h">--</div>
+
+            <div class="field-label" style="margin-top:6px;">Current Order / SKU</div>
+            <div class="field-value" id="ddOrderInfo">--</div>
+
+            <hr style="border:none;border-top:1px solid #e5e7eb;margin:10px 0;" />
+
+            <div class="field-label">Assistant</div>
+            <button id="askButton" type="button">Ask Assistant</button>
+            <div id="assistantResponse"
+                 style="margin-top:8px; max-height:150px; overflow-y:auto;
+                        font-size:0.85rem; line-height:1.4;"></div>
+        </div>
+    </div>
+
+    <script src="/js/supervisor.js"></script>
+</body>
+</html>

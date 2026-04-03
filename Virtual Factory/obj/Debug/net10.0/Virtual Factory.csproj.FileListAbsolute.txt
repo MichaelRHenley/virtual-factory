@@ -178,3 +178,9 @@ C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\Virtual Factory.pdb
 C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\Virtual Factory.genruntimeconfig.cache
 C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\ref\Virtual Factory.dll
 C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt
+C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\compressed\hoivt9ir0c-{0}-oddy1lo2hp-oddy1lo2hp.gz
+C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\compressed\cxhxz2g2o1-{0}-7w6i5o98z8-7w6i5o98z8.gz
+C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\compressed\1l2rlt6iuy-{0}-uk39k3738l-uk39k3738l.gz
+C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\compressed\j8rv1rdzlh-{0}-gpt48tnxfv-gpt48tnxfv.gz
+C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\compressed\wx4cv6vu0b-{0}-5yddwro66e-5yddwro66e.gz
+C:\Dev\Virtual Factory\Virtual Factory\obj\Debug\net10.0\compressed\bo154mnh4h-{0}-majsaneega-majsaneega.gz

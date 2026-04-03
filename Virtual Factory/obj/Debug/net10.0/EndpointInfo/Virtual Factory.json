@@ -537,6 +537,28 @@
         }
       }
     },
+    "/api/assistant/context/{equipmentId}": {
+      "get": {
+        "tags": [
+          "Virtual Factory"
+        ],
+        "parameters": [
+          {
+            "name": "equipmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/assistant/equipment/{equipmentId}": {
       "post": {
         "tags": [

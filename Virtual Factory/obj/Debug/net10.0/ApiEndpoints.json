@@ -99,7 +99,7 @@
   },
   {
     "ContainingType": "Virtual_Factory.Endpoints.AssistantEndpoints\u002B\u003C\u003Ec",
-    "Method": "\u003CMapAssistantEndpoints\u003Eb__0_1",
+    "Method": "\u003CMapAssistantEndpoints\u003Eb__0_2",
     "RelativePath": "api/assistant/ask",
     "HttpMethod": "POST",
     "IsController": false,
@@ -122,6 +122,28 @@
   {
     "ContainingType": "Virtual_Factory.Endpoints.AssistantEndpoints\u002B\u003C\u003Ec",
     "Method": "\u003CMapAssistantEndpoints\u003Eb__0_0",
+    "RelativePath": "api/assistant/context/{equipmentId}",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "equipmentId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Virtual_Factory.Endpoints.AssistantEndpoints\u002B\u003C\u003Ec",
+    "Method": "\u003CMapAssistantEndpoints\u003Eb__0_1",
     "RelativePath": "api/assistant/equipment/{equipmentId}",
     "HttpMethod": "POST",
     "IsController": false,

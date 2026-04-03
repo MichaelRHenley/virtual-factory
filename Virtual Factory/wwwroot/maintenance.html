@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Virtual Factory - Maintenance Console</title>
+    <style>
+        body { font-family: Arial, Helvetica, sans-serif; margin: 20px; background: #f4f6f8; color: #222; }
+        h1 { margin-bottom: 8px; }
+        .subtext { margin-bottom: 16px; color: #666; }
+        nav a { margin-right: 12px; }
+        .layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr); gap: 16px; align-items: flex-start; }
+        .card { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+        .card-title { font-size: 0.9rem; text-transform: uppercase; letter-spacing: .08em; color: #666; margin-bottom: 8px; }
+        .field-row { display: flex; justify-content: space-between; align-items: baseline; margin-top: 6px; font-size: 0.9rem; }
+        .field-label { color: #555; }
+        .field-value { font-weight: 600; }
+        .field-value.small { font-weight: 400; font-size: 0.85rem; color: #555; }
+        select { width: 100%; padding: 6px 8px; border-radius: 4px; border: 1px solid #ccc; }
+        #assistantResponse { white-space: pre-wrap; font-size:0.9rem; line-height:1.4; }
+        button { padding: 8px 14px; border-radius: 6px; border:none; background:#2563eb; color:#fff; cursor:pointer; font-size:0.9rem; }
+        button:disabled { opacity:0.6; cursor:default; }
+        ul { margin:4px 0 0 18px; padding:0; font-size:0.85rem; }
+        li { margin:2px 0; }
+        .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#e5e7eb; font-size:0.75rem; margin-left:6px; }
+    </style>
+</head>
+<body>
+    <nav style="margin-bottom: 12px;">
+        <a href="/index.html">Dashboard</a>
+        <a href="/operator.html">Operator</a>
+        <a href="/maintenance.html">Maintenance</a>
+        <a href="/supervisor.html">Supervisor</a>
+    </nav>
+
+    <h1>Maintenance Console</h1>
+    <div class="subtext">Maintenance-focused view for a single machine</div>
+
+    <div class="layout">
+        <div>
+            <div class="card" style="margin-bottom:12px;">
+                <div class="card-title">Machine</div>
+                <select id="equipmentSelect">
+                    <option>Loading...</option>
+                </select>
+            </div>
+
+            <div class="card" style="margin-bottom:12px;">
+                <div class="card-title">Machine Status</div>
+                <div class="field-row"><span class="field-label">Run status</span><span class="field-value" id="runStatus">No data</span></div>
+                <div class="field-row"><span class="field-label">Alarm status</span><span class="field-value" id="alarmStatus">No data</span></div>
+                <div class="field-row"><span class="field-label">Availability (1h)</span><span class="field-value" id="availability1h">No data</span></div>
+            </div>
+
+            <div class="card" style="margin-bottom:12px;">
+                <div class="card-title">Current Order / SKU</div>
+                <div class="field-row"><span class="field-label">Order / SKU</span><span class="field-value" id="orderInfo">No active order</span></div>
+            </div>
+
+            <div class="card" style="margin-bottom:12px;">
+                <div class="card-title">Signal Health</div>
+                <div class="field-row"><span class="field-label">Normal</span><span class="field-value" id="signalNormalCount">No data</span></div>
+                <div class="field-row"><span class="field-label">Near-limit</span><span class="field-value" id="signalNearCount">No data</span></div>
+                <div class="field-row"><span class="field-label">Abnormal</span><span class="field-value" id="signalAbnormalCount">No data</span></div>
+                <div class="field-row" style="margin-top:10px;"><span class="field-label">Exceptions</span><span class="field-value small" id="signalExceptionsHint">Only near-limit or abnormal signals are listed.</span></div>
+                <ul id="signalExceptionList"></ul>
+            </div>
+
+            <div class="card" style="margin-bottom:12px;">
+                <div class="card-title">Recent Activity</div>
+                <div class="field-row"><span class="field-label">Stops (24h)</span><span class="field-value" id="recentStops24h">No data</span></div>
+                <div class="field-row"><span class="field-label">Alarms (24h)</span><span class="field-value" id="recentAlarms24h">No data</span></div>
+                <div class="field-row"><span class="field-label">Last alarm</span><span class="field-value" id="recentLastAlarm">No data</span></div>
+                <div class="field-row"><span class="field-label">Last stop</span><span class="field-value" id="recentLastStop">No data</span></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Maintenance Status</div>
+                <div class="field-row"><span class="field-label">Overdue PM</span><span class="field-value" id="pmOverdue">No data</span></div>
+                <div class="field-row"><span class="field-label">Scheduled / upcoming PM</span><span class="field-value" id="pmUpcoming">No data</span></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Assistant Diagnostics</div>
+            <button id="askButton" type="button">Ask Assistant</button>
+            <div id="assistantResponse"
+                 style="margin-top:10px; max-height:260px; overflow-y:auto;
+                        font-size:0.85rem; line-height:1.4; border-top:1px solid #e5e7eb;
+                        padding-top:8px;"></div>
+        </div>
+    </div>
+
+    <script src="/js/maintenance.js"></script>
+</body>
+</html>
