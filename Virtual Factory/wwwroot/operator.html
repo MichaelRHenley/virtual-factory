@@ -29,6 +29,10 @@
         .last-updated { font-size:0.75rem; color:#9ca3af; margin-top:6px; margin-bottom:2px; }
         button { padding: 8px 14px; border-radius: 6px; border:none; background:#2563eb; color:#fff; cursor:pointer; font-size:0.9rem; }
         button:disabled { opacity:0.6; cursor:default; }
+        .breadcrumb { font-size:0.8rem; color:#6b7280; margin-bottom:6px; }
+        .breadcrumb a { color:#2563eb; text-decoration:none; }
+        .breadcrumb a:hover { text-decoration:underline; }
+        .breadcrumb span { margin:0 4px; }
     </style>
 </head>
 <body>
@@ -39,6 +43,7 @@
         <a href="/supervisor.html">Supervisor</a>
     </nav>
 
+    <div id="breadcrumb" class="breadcrumb"></div>
     <h1>Operator Console</h1>
     <div class="subtext">Quick view for a single machine</div>
 
@@ -78,5 +83,26 @@
 
     <script src="/js/assistant-client.js"></script>
     <script src="/js/operator.js"></script>
+    <script>
+        (function () {
+            const SEP = '<span>›</span>';
+            const p = new URLSearchParams(window.location.search);
+            const eq = p.get("equipment");
+            const issue = p.get("issue");
+            let html = '<a href="/maintenance.html">Maintenance</a>';
+            if (eq) {
+                const eqUrl = '/maintenance.html?equipment=' + encodeURIComponent(eq);
+                html += SEP + '<a href="' + eqUrl + '">' + eq + '</a>';
+                if (issue) {
+                    const issueUrl = eqUrl + '&issue=' + encodeURIComponent(issue);
+                    const label = issue.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                    html += SEP + '<a href="' + issueUrl + '">' + label + '</a>';
+                }
+            } else {
+                html += SEP + 'Operator';
+            }
+            document.getElementById("breadcrumb").innerHTML = html;
+        })();
+    </script>
 </body>
 </html>

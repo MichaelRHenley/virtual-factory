@@ -17,6 +17,8 @@
     let activeBadgeLabel = null;
     let lastRisingSegment = "";
     let refreshInProgress = false;
+    let lastAutoAskTime = 0;
+    let lastBadgeKey    = "";
 
     function escapeHtml(value) {
         if (value == null) return "";
@@ -186,16 +188,39 @@
         askButton.textContent = "Thinking...";
         assistantResponseEl.textContent = "Thinking...";
         try {
-            const ctx = await window.AssistantClient.fetchAssistantContext(currentEquipment);
-            if (!ctx) {
-                assistantResponseEl.textContent = "No assistant context available.";
-            } else {
-                // keep a copy of assistant context for badge heuristics
-                lastContext = Object.assign({}, lastContext || {}, ctx);
-                updateBadgesFromAssistantContext(lastContext, ctx.contextSummary || ctx.ContextSummary || ctx.inputSummary || ctx.InputSummary || "");
-                const raw = ctx.contextSummary || ctx.ContextSummary || ctx.inputSummary || ctx.InputSummary || "";
-                assistantResponseEl.textContent = formatOperatorAssistantAnswer(raw);
-            }
+            const ctx = lastContext || {};
+            const issueSlug = new URLSearchParams(window.location.search).get("issue");
+            const issue = issueSlug ? (SLUG_TO_BADGE[issueSlug] || issueSlug) : null;
+
+            const rawAvail = ctx.availability1h ?? ctx.availability1H;
+            let avail = null;
+            if (typeof rawAvail === "number")
+                avail = rawAvail > 1 ? rawAvail : rawAvail * 100;
+            else if (rawAvail && typeof rawAvail.runningPercent === "number")
+                avail = rawAvail.runningPercent;
+
+            const po = ctx.activeProductionOrder || ctx.currentProductionOrder || null;
+            const sku = po?.sku || po?.Sku || ctx.activeSku || ctx.currentSku || null;
+
+            const payload = {
+                equipment:       currentEquipment,
+                issue:           issue,
+                availability1h:  avail,
+                stops24h:        ctx.eventSummary?.stopCount24h  ?? ctx.stopCount24h  ?? null,
+                alarms24h:       ctx.eventSummary?.alarmCount24h ?? ctx.alarmCount24h ?? null,
+                sku:             sku,
+                signalExceptions: null,
+            };
+
+            const res = await fetch("/api/assistant/ask", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+            if (!res.ok) throw new Error("ask failed: " + res.status);
+            const data = await res.json();
+            const raw = data.answer ?? data.assistantResponse ?? data.response ?? "No response.";
+            renderAssistantAnswer(raw, assistantResponseEl, data);
         } catch (err) {
             console.error("askAssistant failed", err);
             assistantResponseEl.textContent = "Assistant request failed.";
@@ -324,11 +349,22 @@
         renderBadges(Array.from(badges));
     }
 
+    function scheduleAutoAsk() {
+        if (Date.now() - lastAutoAskTime < 10000) return;
+        lastAutoAskTime = Date.now();
+        askAssistant();
+    }
+
     function renderBadges(badges) {
         if (!assistantBadgesEl) return;
         // Only close the detail panel if the active badge no longer exists in the new set
         if (activeBadgeLabel && !badges.includes(activeBadgeLabel)) {
             closeBadgeDetail();
+        }
+        const newKey = [...(badges || [])].sort().join(",");
+        if (newKey !== lastBadgeKey) {
+            lastBadgeKey = newKey;
+            scheduleAutoAsk();
         }
         if (!badges || !badges.length) {
             assistantBadgesEl.innerHTML = "";
@@ -491,44 +527,119 @@
         }
     }
 
-    function formatOperatorAssistantAnswer(raw) {
-        if (!raw) return "No response.";
+    function renderAssistantAnswer(raw, el, data = {}) {
+        if (!el) return;
+        if (!raw || !raw.trim()) { el.textContent = "No response."; return; }
 
-        const currentCondition = extractAssistantSection(raw, "Current Condition");
-        const operationalContext = extractAssistantSection(raw, "Operational Context");
-        let suggestedChecks = extractAssistantSection(raw, "Suggested Checks");
+        const lines = raw.split(/\r?\n/);
+        const assessIdx = lines.findIndex(l => l.trim() === "Assessment:");
 
-        if (suggestedChecks) {
-            const bulletLines = suggestedChecks
-                .split(/\r?\n/)
-                .map(l => l.trim())
-                .filter(l => l.length > 0 && (l.startsWith("-") || l.startsWith("*") || l.match(/^\d+\./)));
-            if (bulletLines.length > 0) {
-                suggestedChecks = bulletLines[0];
+        // No recognised structure — plain-text fallback
+        if (assessIdx === -1) {
+            el.style.whiteSpace = "pre-wrap";
+            el.textContent = raw;
+            return;
+        }
+
+        const esc = s => String(s)
+            .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+        const headerLines = lines.slice(0, assessIdx).map(l => l.trim()).filter(Boolean);
+        const assessLines = lines.slice(assessIdx + 1).map(l => l.trim()).filter(Boolean);
+
+        // Summary = all header lines except the activity count line
+        const summaryLines = headerLines.filter(l => !l.startsWith("Activity in last 24h:"));
+        const activityLine = headerLines.find(l => l.startsWith("Activity in last 24h:"));
+
+        // Prefer structured fields from the response; fall back to regex extraction
+        const availVal  = data.availability1h != null
+            ? `${Number(data.availability1h).toFixed(1)}%`
+            : summaryLines[0]?.match(/availability last 1h:\s*([\d.]+%)/i)?.[1] ?? null;
+        const stopsVal  = data.stops24h  != null
+            ? String(data.stops24h)
+            : activityLine?.match(/(\d+)\s+stop/i)?.[1]  ?? null;
+        const alarmsVal = data.alarms24h != null
+            ? String(data.alarms24h)
+            : activityLine?.match(/(\d+)\s+alarm/i)?.[1] ?? null;
+
+        const metrics = [
+            availVal  ? { label: "Availability (1h)", value: availVal  } : null,
+            stopsVal  ? { label: "Stops (24h)",       value: stopsVal  } : null,
+            alarmsVal ? { label: "Alarms (24h)",       value: alarmsVal } : null,
+        ].filter(Boolean);
+
+        const numberedItems  = assessLines.filter(l =>  /^\d+\.\s/.test(l)).map(l => l.replace(/^\d+\.\s*/, ""));
+        const freeformAssess = assessLines.filter(l => !/^\d+\.\s/.test(l));
+
+        const LABEL   = "font-size:0.72rem;text-transform:uppercase;letter-spacing:.05em;color:#666;margin-bottom:3px;";
+        const SECTION = "margin-bottom:10px;";
+        const ROW     = "display:flex;justify-content:space-between;font-size:0.85rem;margin-top:2px;";
+
+        let html = "";
+
+        if (summaryLines.length)
+            html += `<div style="${SECTION}"><div style="${LABEL}">Summary</div>`
+                  + summaryLines.map(l => `<div>${esc(l)}</div>`).join("")
+                  + `</div>`;
+
+        if (metrics.length)
+            html += `<div style="${SECTION}"><div style="${LABEL}">Activity</div>`
+                  + metrics.map(m =>
+                        `<div style="${ROW}">` +
+                        `<span style="color:#555;">${esc(m.label)}</span>` +
+                        `<span style="font-weight:600;">${esc(m.value)}</span>` +
+                        `</div>`
+                    ).join("")
+                  + `</div>`;
+
+        if (numberedItems.length || freeformAssess.length) {
+            html += `<div><div style="${LABEL}">Assessment</div>`;
+            if (numberedItems.length)
+                html += `<ol style="margin:0;padding-left:18px;">`
+                      + numberedItems.map(item => `<li style="margin-bottom:2px;">${esc(item)}</li>`).join("")
+                      + `</ol>`;
+            if (freeformAssess.length)
+                html += freeformAssess.map(l => `<div>${esc(l)}</div>`).join("");
+            html += `</div>`;
+        }
+
+        el.style.whiteSpace = "normal";
+        el.innerHTML = html;
+    }
+
+    const SLUG_TO_BADGE = {
+        "frequent-stops":          "Frequent stops",
+        "high-alarm-activity":     "High alarm activity",
+        "low-availability":        "Low availability",
+        "rising-condition-signal": "Rising condition signal",
+        "material-risk":           "Material risk",
+    };
+
+    async function activateFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        const equipParam = params.get("equipment");
+        const issueParam  = params.get("issue");
+
+        if (equipParam && equipmentSelect) {
+            const option = Array.from(equipmentSelect.options).find(o => o.value === equipParam);
+            if (option) {
+                equipmentSelect.value = equipParam;
+                currentEquipment = equipParam;
+                await refreshForEquipment();
             }
         }
 
-        const lines = [];
-        if (currentCondition) lines.push("Current Condition: " + currentCondition.replace(/\s+/g, " "));
-        if (operationalContext) lines.push("Operational Context: " + operationalContext.replace(/\s+/g, " "));
-        if (suggestedChecks) lines.push("Suggested Check: " + suggestedChecks.replace(/^[*-]\s*/, ""));
-
-        if (!lines.length) {
-            const fallbackLines = raw.split(/\r?\n/)
-                .map(l => l.trim())
-                .filter(l => l.length > 0)
-                .slice(0, 4);
-            return fallbackLines.join("\n");
+        if (issueParam) {
+            const badgeLabel = SLUG_TO_BADGE[issueParam];
+            if (badgeLabel) onBadgeClick(badgeLabel);
         }
-
-        return lines
-            .map(l => (l.length > 260 ? l.substring(0, 257) + "..." : l))
-            .join("\n");
     }
 
     if (equipmentSelect) {
         equipmentSelect.addEventListener("change", async e => {
             currentEquipment = e.target.value || null;
+            lastAutoAskTime  = 0;
+            lastBadgeKey     = "";
             await refreshForEquipment();
         });
     }
@@ -538,6 +649,6 @@
     }
 
     if (equipmentSelect) {
-        loadEquipmentList().then(() => startPolling());
+        loadEquipmentList().then(() => activateFromUrl()).then(() => startPolling());
     }
 })();

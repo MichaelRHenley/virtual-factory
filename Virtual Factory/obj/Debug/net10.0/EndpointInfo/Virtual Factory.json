@@ -862,8 +862,38 @@
       "AssistantAskRequestDto": {
         "type": "object",
         "properties": {
-          "equipmentName": {
+          "equipment": {
             "type": "string",
+            "nullable": true
+          },
+          "issue": {
+            "type": "string",
+            "nullable": true
+          },
+          "availability1h": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "stops24h": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "alarms24h": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "sku": {
+            "type": "string",
+            "nullable": true
+          },
+          "signalExceptions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
             "nullable": true
           }
         },

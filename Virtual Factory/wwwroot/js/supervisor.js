@@ -36,6 +36,13 @@
         "Frequent stops", "Rising condition signal",
     ];
 
+    function buildMaintenanceUrl(equipmentId, badgeLabel) {
+        const params = new URLSearchParams();
+        params.set("equipment", equipmentId);
+        if (badgeLabel) params.set("issue", badgeLabel.toLowerCase().replace(/\s+/g, "-"));
+        return `/maintenance.html?${params.toString()}`;
+    }
+
     function escapeHtml(value) {
         if (value == null) return "";
         return String(value)
@@ -170,19 +177,19 @@
                 }).join("");
 
                 worstTableBody.querySelectorAll("tr").forEach(tr => {
-                    // Row click: drilldown + auto-open highest-priority badge (if any)
+                    // Row click: navigate to maintenance with top badge pre-activated
                     tr.addEventListener("click", () => {
                         const eq = tr.getAttribute("data-eq");
-                        const topBadge = tr.getAttribute("data-top-badge") || undefined;
-                        if (eq) setDrilldownEquipment(eq, topBadge);
+                        const topBadge = tr.getAttribute("data-top-badge") || null;
+                        if (eq) window.location.href = buildMaintenanceUrl(eq, topBadge);
                     });
-                    // Chip click: drilldown + open that specific badge; don't bubble to row
+                    // Chip click: navigate with that specific badge; don't bubble to row
                     tr.querySelectorAll(".badge.fleet").forEach(chip =>
                         chip.addEventListener("click", e => {
                             e.stopPropagation();
                             const eq = tr.getAttribute("data-eq");
-                            const badge = chip.getAttribute("data-badge") || undefined;
-                            if (eq) setDrilldownEquipment(eq, badge);
+                            const badge = chip.getAttribute("data-badge") || null;
+                            if (eq) window.location.href = buildMaintenanceUrl(eq, badge);
                         })
                     );
                 });

@@ -23,6 +23,12 @@
         .badge.fleet:hover { background:#ea580c; }
         .filter-label { font-size:0.8rem; color:#6b7280; }
         .btn-link { background:none; border:none; color:#2563eb; font-size:0.8rem; cursor:pointer; padding:0 0 0 6px; text-decoration:underline; }
+        .open-in-link { display:inline-block; font-size:0.8rem; color:#2563eb; text-decoration:none; margin-top:6px; }
+        .open-in-link:hover { text-decoration:underline; }
+        .breadcrumb { font-size:0.8rem; color:#6b7280; margin-bottom:6px; }
+        .breadcrumb a { color:#2563eb; text-decoration:none; }
+        .breadcrumb a:hover { text-decoration:underline; }
+        .breadcrumb span { margin:0 4px; }
         .check-context { font-size:0.8rem; color:#6b7280; margin-bottom:6px; }
         .check-cluster { background:#fef3c7; color:#92400e; padding:4px 6px; border-radius:4px; font-size:0.82rem; list-style:none; margin-left:-18px; margin-bottom:6px; }
         table { width:100%; border-collapse:collapse; }
@@ -43,6 +49,7 @@
         <a href="/supervisor.html">Supervisor</a>
     </nav>
 
+    <div id="breadcrumb" class="breadcrumb"></div>
     <h1>Maintenance Console</h1>
     <div class="subtext">Maintenance-focused view for a single machine</div>
 
@@ -53,6 +60,7 @@
                 <select id="equipmentSelect">
                     <option>Loading...</option>
                 </select>
+                <a id="openInOperatorLink" class="open-in-link" href="/operator.html">Open in Operator →</a>
             </div>
 
             <div class="card" style="margin-bottom:12px;">
@@ -132,5 +140,26 @@
 
     <script src="/js/assistant-client.js"></script>
     <script src="/js/maintenance.js"></script>
+    <script>
+        (function () {
+            const SEP = '<span>›</span>';
+            const p = new URLSearchParams(window.location.search);
+            const eq = p.get("equipment");
+            const issue = p.get("issue");
+            const supervisorLink = '<a href="/index.html">Supervisor</a>';
+            let html = supervisorLink;
+            if (eq) {
+                const eqUrl = '/maintenance.html?equipment=' + encodeURIComponent(eq);
+                html += SEP + (issue ? '<a href="' + eqUrl + '">' + eq + '</a>' : eq);
+                if (issue) {
+                    const label = issue.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                    html += SEP + label;
+                }
+            } else {
+                html += SEP + 'Maintenance';
+            }
+            document.getElementById("breadcrumb").innerHTML = html;
+        })();
+    </script>
 </body>
 </html>

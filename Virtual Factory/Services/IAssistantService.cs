@@ -11,5 +11,9 @@ namespace Virtual_Factory.Services
         Task<AssistantResponseDto?> AskAsync(
             string? equipmentName,
             CancellationToken cancellationToken = default);
+
+        Task<AssistantResponseDto> BuildContextualAnswerAsync(
+            AssistantAskRequestDto request,
+            CancellationToken cancellationToken = default);
     }
 }

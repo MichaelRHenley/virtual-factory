@@ -32,6 +32,10 @@
         .badge.fleet { display:inline-block; padding:2px 6px; border-radius:999px; font-size:0.7rem; font-weight:600; background:#f97316; color:#111827; margin-right:3px; white-space:nowrap; }
         tr[data-eq] { cursor:pointer; }
         tr[data-eq]:hover { background:#f9fafb; }
+        .breadcrumb { font-size:0.8rem; color:#6b7280; margin-bottom:6px; }
+        .breadcrumb a { color:#2563eb; text-decoration:none; }
+        .breadcrumb a:hover { text-decoration:underline; }
+        .breadcrumb span { margin:0 4px; }
     </style>
 </head>
 <body>
@@ -42,6 +46,7 @@
         <a href="/supervisor.html">Supervisor</a>
     </nav>
 
+    <div id="breadcrumb" class="breadcrumb"></div>
     <h1>Supervisor Console</h1>
     <div class="subtext">Fleet overview and drilldown</div>
 
@@ -108,5 +113,9 @@
 
     <script src="/js/assistant-client.js"></script>
     <script src="/js/supervisor.js"></script>
+    <script>
+        document.getElementById("breadcrumb").innerHTML =
+            '<a href="/index.html">Supervisor</a><span>›</span>Fleet overview';
+    </script>
 </body>
 </html>

@@ -62,8 +62,11 @@ namespace Virtual_Factory.Endpoints
                 IAssistantService service,
                 CancellationToken cancellationToken) =>
             {
-                var result = await service.AskAsync(body.EquipmentName, cancellationToken);
-                return result is null ? Results.NotFound() : Results.Ok(result);
+                if (string.IsNullOrWhiteSpace(body.Equipment))
+                    return Results.BadRequest(new { error = "equipment is required" });
+
+                var result = await service.BuildContextualAnswerAsync(body, cancellationToken);
+                return Results.Ok(result);
             });
 
             return app;
